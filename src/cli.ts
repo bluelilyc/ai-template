@@ -12,8 +12,8 @@ const __dirname = dirname(__filename);
 const program = new Command();
 
 program
-  .name('ai-template')
-  .description('Install AI agent templates for GitHub Copilot or Claude')
+  .name('aipm')
+  .description('AIPM (AI Package Manager) installs AI agent templates for GitHub Copilot or Claude')
   .version('1.0.0');
 
 program

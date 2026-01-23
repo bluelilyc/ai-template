@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import { join, dirname, basename } from 'path';
-import type { InstallOptions, TemplateFile, McpConfig } from './types.js';
+import type { InstallOptions, TemplateFile, McpConfig, McpServerConfig } from './types.js';
 
 /**
  * Get the target directory based on the installation target (Claude or Copilot)
@@ -14,7 +14,7 @@ export function getTargetDirectory(target: 'claude' | 'copilot', customPath?: st
   if (target === 'claude') {
     return '.github/claude';
   } else {
-    return '.github/copilot';
+    return '.github';
   }
 }
 
@@ -93,8 +93,8 @@ export async function mergeMcpConfig(
   const sourceMcpPath = sourcePath;
   
   // Read source MCP config
-  const sourceMcp = await readJsonFile(sourceMcpPath);
-  if (!sourceMcp || !sourceMcp.mcpServers) {
+  const sourceMcp = await readJsonFile(sourceMcpPath) as unknown;
+  if (!isMcpConfig(sourceMcp) || !sourceMcp.mcpServers) {
     console.log('No MCP servers found in source configuration');
     return;
   }
@@ -107,6 +107,10 @@ export async function mergeMcpConfig(
   
   // Merge configurations
   for (const [serverName, serverConfig] of Object.entries(sourceMcp.mcpServers)) {
+    if (!isMcpServerConfig(serverConfig)) {
+      console.log(`Warning: MCP server "${serverName}" has invalid configuration, skipping...`);
+      continue;
+    }
     if (targetMcp.mcpServers[serverName]) {
       console.log(`Warning: MCP server "${serverName}" already exists, skipping...`);
     } else {
@@ -117,6 +121,47 @@ export async function mergeMcpConfig(
   
   // Write merged configuration
   await writeJsonFile(targetMcpPath, targetMcp);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isMcpConfig(value: unknown): value is McpConfig {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  if (!('mcpServers' in value)) {
+    return true;
+  }
+
+  return isRecord((value as { mcpServers?: unknown }).mcpServers);
+}
+
+function isMcpServerConfig(value: unknown): value is McpServerConfig {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  const record = value as Record<string, unknown>;
+  if (typeof record.command !== 'string') {
+    return false;
+  }
+
+  if (record.args !== undefined) {
+    if (!Array.isArray(record.args) || record.args.some((arg) => typeof arg !== 'string')) {
+      return false;
+    }
+  }
+
+  if (record.env !== undefined) {
+    if (!isRecord(record.env) || Object.values(record.env).some((val) => typeof val !== 'string')) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 /**

@@ -1,17 +1,17 @@
-# AI Template
+# AIPM (AI Package Manager)
 
-A CLI tool to install AI agent templates, instructions, prompts, and skills for GitHub Copilot or Claude Code.
+AIPM (AI Package Manager) is a CLI tool to install AI agent templates, instructions, prompts, and skills for GitHub Copilot or Claude Code.
 
 ## Installation
 
 ```bash
-npm install -g ai-template
+npm install -g aipm
 ```
 
 Or use directly with npx:
 
 ```bash
-npx ai-template install
+npx aipm install
 ```
 
 ## Usage
@@ -21,13 +21,13 @@ npx ai-template install
 Install templates for GitHub Copilot (default):
 
 ```bash
-ai-template install
+aipm install
 ```
 
 Install templates for Claude:
 
 ```bash
-ai-template install --target claude
+aipm install --target claude
 ```
 
 ### Custom Installation Path
@@ -35,7 +35,7 @@ ai-template install --target claude
 Install to a custom directory:
 
 ```bash
-ai-template install --path /path/to/custom/directory
+aipm install --path /path/to/custom/directory
 ```
 
 ### Using Custom Templates
@@ -43,7 +43,7 @@ ai-template install --path /path/to/custom/directory
 Install from a custom template directory:
 
 ```bash
-ai-template install --source ./my-templates
+aipm install --source ./my-templates
 ```
 
 ### MCP Configuration
@@ -51,7 +51,7 @@ ai-template install --source ./my-templates
 Merge MCP server configurations:
 
 ```bash
-ai-template install --mcp ./mcp.json
+aipm install --mcp ./mcp.json
 ```
 
 ## Template Structure
@@ -89,10 +89,10 @@ Complete skill packages with examples and documentation:
 
 ### GitHub Copilot
 
-Templates are installed to `.github/copilot/`:
+Templates are installed to `.github/` (no `copilot` subdirectory):
 
 ```
-.github/copilot/
+.github/
 ├── agents/
 │   ├── code-review.agent.md
 │   └── docs-writer.agent.md
@@ -103,7 +103,7 @@ Templates are installed to `.github/copilot/`:
 │   ├── code-quality.instructions.md
 │   └── git-workflow.instructions.md
 └── skills/
-    └── testing.skill/
+  └── testing.skill/
 ```
 
 ### Claude
@@ -161,7 +161,7 @@ The tool can merge MCP (Model Context Protocol) server configurations. Create an
 Then merge it into your target directory:
 
 ```bash
-ai-template install --mcp ./mcp.json
+aipm install --mcp ./mcp.json
 ```
 
 ## Development
@@ -177,7 +177,7 @@ npm run build
 
 ```bash
 npm link
-ai-template install
+aipm install
 ```
 
 ## License

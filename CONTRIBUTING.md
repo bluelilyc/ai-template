@@ -1,11 +1,11 @@
-# Contributing to AI Template
+# Contributing to AIPM (AI Package Manager)
 
-Thank you for your interest in contributing to AI Template! This document provides guidelines for contributing to the project.
+Thank you for your interest in contributing to AIPM (AI Package Manager)! This document provides guidelines for contributing to the project.
 
 ## Getting Started
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/your-username/ai-template.git`
+2. Clone your fork: `git clone https://github.com/your-username/aipm.git`
 3. Install dependencies: `npm install`
 4. Make your changes
 5. Build the project: `npm run build`
@@ -36,7 +36,7 @@ npm link
 # Test the installation
 mkdir test-repo && cd test-repo
 git init
-ai-template install
+aipm install
 
 # Or test directly without linking
 node dist/cli.js install --help

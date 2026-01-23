@@ -8,9 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2026-01-22
 
 ### Added
-- Initial release of ai-template CLI tool
+- Initial release of AIPM (AI Package Manager) CLI tool
 - Command-line interface for installing AI templates
-- Support for GitHub Copilot directory structure (`.github/copilot`)
+- Support for GitHub Copilot directory structure (`.github/`)
 - Support for Claude directory structure (`.github/claude`)
 - Installation of `.agent.md` files for AI agents
 - Installation of `.prompt.md` files for reusable prompts

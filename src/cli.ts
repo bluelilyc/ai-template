@@ -4,7 +4,8 @@ import { promises as fs } from 'fs';
 import { join, resolve, basename } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import { installTemplates, getTargetDirectory } from './installer.js';
+import { installTemplates, getTargetDirectory, readTemplateManifest } from './installer.js';
+import { formatTemplateTable, listTemplateManifests } from './listing.js';
 import type { InstallOptions } from './types.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -66,13 +67,40 @@ program
       };
 
       for (const templateDir of templateDirs) {
-        console.log(`Installing template pack: ${basename(templateDir)}`);
+        const manifest = await readTemplateManifest(templateDir);
+        const label = manifest?.name ?? basename(templateDir);
+        const version = manifest?.version ? `@${manifest.version}` : '';
+        console.log(`Installing template pack: ${label}${version}`);
         await installTemplates(templateDir, targetPath, installOptions);
       }
       
       console.log('\n✓ Installation complete!');
     } catch (error: any) {
       console.error(`\n✗ Installation failed: ${error.message}`);
+      process.exit(1);
+    }
+  });
+
+program
+  .command('list')
+  .description('List available template packs')
+  .option('-s, --source <path>', 'Source directory containing templates (default: ./templates)')
+  .action(async (options) => {
+    try {
+      const templatesRoot = options.source
+        ? resolve(process.cwd(), options.source)
+        : join(__dirname, '..', 'templates');
+
+      const listings = await listTemplateManifests(templatesRoot);
+
+      if (listings.length === 0) {
+        console.log('No template packs found');
+        return;
+      }
+
+      console.log(formatTemplateTable(listings));
+    } catch (error: any) {
+      console.error(`\n✗ Failed to list template packs: ${error.message}`);
       process.exit(1);
     }
   });

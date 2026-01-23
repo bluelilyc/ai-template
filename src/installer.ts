@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import { join, dirname, basename } from 'path';
-import type { InstallOptions, TemplateFile, McpConfig, McpServerConfig } from './types.js';
+import type { InstallOptions, TemplateFile, McpConfig, McpServerConfig, TemplateManifest } from './types.js';
 
 /**
  * Get the target directory based on the installation target (Claude or Copilot)
@@ -72,6 +72,25 @@ export async function readJsonFile(filePath: string): Promise<any> {
     }
     throw error;
   }
+}
+
+/**
+ * Read a template manifest file if present
+ */
+export async function readTemplateManifest(templateDir: string): Promise<TemplateManifest | null> {
+  const manifestPath = join(templateDir, 'template.json');
+  const manifest = await readJsonFile(manifestPath) as unknown;
+
+  if (!manifest) {
+    return null;
+  }
+
+  if (!isTemplateManifest(manifest)) {
+    console.log(`Warning: Invalid template.json at ${manifestPath}, ignoring...`);
+    return null;
+  }
+
+  return manifest;
 }
 
 /**
@@ -162,6 +181,14 @@ function isMcpServerConfig(value: unknown): value is McpServerConfig {
   }
 
   return true;
+}
+
+function isTemplateManifest(value: unknown): value is TemplateManifest {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return typeof (value as { name?: unknown }).name === 'string';
 }
 
 /**

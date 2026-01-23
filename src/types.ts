@@ -11,6 +11,18 @@ export interface TemplateFile {
   type: 'agent' | 'prompt' | 'instruction' | 'skill';
 }
 
+export interface TemplateManifest {
+  name: string;
+  version?: string;
+  description?: string;
+  author?: string | { name: string; email?: string; url?: string };
+  license?: string;
+  homepage?: string;
+  repository?: string | { type?: string; url?: string };
+  keywords?: string[];
+  tags?: string[];
+}
+
 export interface McpServerConfig {
   command: string;
   args?: string[];

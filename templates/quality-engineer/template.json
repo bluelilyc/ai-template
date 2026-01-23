@@ -1,0 +1,9 @@
+{
+  "name": "quality-engineer",
+  "version": "1.0.0",
+  "description": "Quality engineering templates focused on reliability and test strategy.",
+  "author": "AIPM",
+  "license": "MIT",
+  "keywords": ["quality", "testing", "reliability"],
+  "tags": ["quality-engineer", "qa"]
+}

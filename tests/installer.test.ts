@@ -6,7 +6,8 @@ import {
   getTargetDirectory,
   findTemplateFiles,
   installTemplates,
-  mergeMcpConfig
+  mergeMcpConfig,
+  readTemplateManifest
 } from '../src/installer.js';
 
 let workDir: string;
@@ -49,6 +50,7 @@ describe('findTemplateFiles', () => {
     await writeFile(join(baseDir, 'agents', 'quality-engineer.agent.md'), 'agent');
     await writeFile(join(baseDir, 'prompts', 'quality-review.prompt.md'), 'prompt');
     await writeFile(join(baseDir, 'instructions', 'quality-engineer.instructions.md'), 'instructions');
+    await writeFile(join(baseDir, 'template.json'), JSON.stringify({ name: 'quality-engineer' }, null, 2));
 
     const files = await findTemplateFiles(baseDir);
     const destinations = files.map((file) => file.destination).sort();
@@ -62,6 +64,21 @@ describe('findTemplateFiles', () => {
     ].sort());
 
     expect(types).toEqual(['agent', 'instruction', 'prompt', 'skill'].sort());
+  });
+});
+
+describe('readTemplateManifest', () => {
+  it('reads a valid template.json manifest', async () => {
+    const templateDir = join(workDir, 'pack');
+    await mkdir(templateDir, { recursive: true });
+    await writeFile(
+      join(templateDir, 'template.json'),
+      JSON.stringify({ name: 'quality-engineer', version: '1.0.0' }, null, 2)
+    );
+
+    const manifest = await readTemplateManifest(templateDir);
+
+    expect(manifest).toEqual({ name: 'quality-engineer', version: '1.0.0' });
   });
 });
 

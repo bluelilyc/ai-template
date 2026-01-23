@@ -54,6 +54,14 @@ Templates are stored under `templates/<template-name>/`. By default, all packs a
 aipm install --template quality-engineer
 ```
 
+### Listing Available Template Packs
+
+List available template packs from the source location:
+
+```bash
+aipm list
+```
+
 ### MCP Configuration
 
 Merge MCP server configurations:
@@ -72,6 +80,7 @@ templates/
     agents/
     prompts/
     instructions/
+    template.json
 ```
 
 The package includes the following types of templates:
@@ -93,6 +102,10 @@ Reusable prompt templates for common tasks:
 General guidelines and best practices:
 
 - `quality-engineer.instructions.md` - Quality engineering standards
+
+### Manifest (`template.json`)
+
+Each template pack can include a `template.json` manifest modeled after the Claude Code `plugin.json` format. AIPM uses this for metadata (name, version, description) and does not install it into the target directory.
 
 ### Skills (`.skill` directories)
 

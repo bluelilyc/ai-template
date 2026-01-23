@@ -52,14 +52,15 @@ To add new templates:
    - `templates/<template-name>/prompts/` for `.prompt.md` files
    - `templates/<template-name>/instructions/` for `.instructions.md` files
    - `templates/<template-name>/skills/` for `.skill` directories
+3. Add a `template.json` manifest (modeled after Claude Code `plugin.json`) for template metadata
 
-3. Follow the naming conventions:
+4. Follow the naming conventions:
    - Agent files: `name.agent.md`
    - Prompt files: `name.prompt.md`
    - Instruction files: `name.instructions.md`
    - Skill directories: `name.skill/`
 
-4. Include clear documentation in your template
+5. Include clear documentation in your template
 
 ## Code Style
 

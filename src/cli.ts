@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { join, resolve } from 'path';
+import { promises as fs } from 'fs';
+import { join, resolve, basename } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { installTemplates, getTargetDirectory } from './installer.js';
@@ -21,8 +22,8 @@ program
   .description('Install templates into your repository')
   .option('-t, --target <type>', 'Target system: claude or copilot', 'copilot')
   .option('-p, --path <path>', 'Custom installation path (overrides default)')
-  .option('-s, --source <path>', 'Source directory containing templates (default: ./templates/<template>)')
-  .option('--template <name>', 'Template name under ./templates (default: default)', 'default')
+  .option('-s, --source <path>', 'Source directory containing templates (default: ./templates)')
+  .option('--template <name>', 'Template name under ./templates (default: all)')
   .option('--mcp <file>', 'Path to mcp.json file to merge')
   .action(async (options) => {
     try {
@@ -34,9 +35,20 @@ program
       }
 
       // Determine source directory
-      const sourceDir = options.source 
+      const templatesRoot = options.source
         ? resolve(process.cwd(), options.source)
-        : join(__dirname, '..', 'templates', options.template);
+        : join(__dirname, '..', 'templates');
+
+      const templateDirs = options.template
+        ? [join(templatesRoot, options.template)]
+        : (await fs.readdir(templatesRoot, { withFileTypes: true }))
+            .filter((entry) => entry.isDirectory())
+            .map((entry) => join(templatesRoot, entry.name));
+
+      if (templateDirs.length === 0) {
+        console.log('No template packs found to install');
+        return;
+      }
 
       // Determine target directory
       const targetPath = options.path 
@@ -53,7 +65,10 @@ program
         mcpSource: options.mcp ? resolve(process.cwd(), options.mcp) : undefined
       };
 
-      await installTemplates(sourceDir, targetPath, installOptions);
+      for (const templateDir of templateDirs) {
+        console.log(`Installing template pack: ${basename(templateDir)}`);
+        await installTemplates(templateDir, targetPath, installOptions);
+      }
       
       console.log('\n✓ Installation complete!');
     } catch (error: any) {

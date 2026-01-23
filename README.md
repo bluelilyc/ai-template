@@ -18,13 +18,13 @@ npx aipm install
 
 ### Basic Installation
 
-Install templates for GitHub Copilot (default):
+Install all template packs for GitHub Copilot (default):
 
 ```bash
 aipm install
 ```
 
-Install templates for Claude:
+Install all template packs for Claude:
 
 ```bash
 aipm install --target claude
@@ -40,7 +40,7 @@ aipm install --path /path/to/custom/directory
 
 ### Using Custom Templates
 
-Install from a custom template directory:
+Install from a custom template directory (installs all packs under it):
 
 ```bash
 aipm install --source ./my-templates
@@ -48,7 +48,7 @@ aipm install --source ./my-templates
 
 ### Choosing a Template Pack
 
-Templates are stored under `templates/<template-name>/`. Install a specific pack with:
+Templates are stored under `templates/<template-name>/`. By default, all packs are installed. Install a specific pack with:
 
 ```bash
 aipm install --template default

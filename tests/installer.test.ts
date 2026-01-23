@@ -73,6 +73,21 @@ describe('findTemplateFiles', () => {
 
     expect(types).toEqual(['agent', 'instruction', 'prompt', 'skill'].sort());
   });
+
+  it('includes mcp config files', async () => {
+    const baseDir = join(workDir, 'templates');
+    await mkdir(baseDir, { recursive: true });
+
+    await writeFile(join(baseDir, 'mcp.json'), JSON.stringify({ mcpServers: {} }, null, 2));
+    await writeFile(join(baseDir, '.mcp.json'), JSON.stringify({ mcpServers: {} }, null, 2));
+
+    const files = await findTemplateFiles(baseDir);
+    const destinations = files.map((file) => file.destination).sort();
+    const types = files.map((file) => file.type).sort();
+
+    expect(destinations).toEqual(['.mcp.json', 'mcp.json'].sort());
+    expect(types).toEqual(['mcp', 'mcp']);
+  });
 });
 
 describe('readTemplateManifest', () => {
@@ -280,5 +295,52 @@ describe('mergeMcpConfig', () => {
     expect(Object.keys(merged.mcpServers).sort()).toEqual(['existing', 'valid']);
     expect(merged.mcpServers.existing.command).toBe('node');
     expect(merged.mcpServers.valid.command).toBe('npx');
+  });
+
+  it('creates target mcp.json when missing', async () => {
+    const targetDir = join(workDir, 'target');
+    const sourcePath = join(workDir, 'source-mcp.json');
+
+    await mkdir(targetDir, { recursive: true });
+    await writeFile(
+      sourcePath,
+      JSON.stringify(
+        {
+          mcpServers: {
+            filesystem: {
+              command: 'npx',
+              args: ['-y', '@modelcontextprotocol/server-filesystem', '/tmp'],
+            },
+          },
+        },
+        null,
+        2
+      )
+    );
+
+    await mergeMcpConfig(targetDir, sourcePath);
+
+    const merged = await readJson<{ mcpServers: Record<string, { command: string }> }>(
+      join(targetDir, 'mcp.json')
+    );
+
+    expect(Object.keys(merged.mcpServers)).toEqual(['filesystem']);
+    expect(merged.mcpServers.filesystem.command).toBe('npx');
+  });
+
+  it('does nothing when source config is invalid', async () => {
+    const targetDir = join(workDir, 'target');
+    const sourcePath = join(workDir, 'invalid-mcp.json');
+
+    await mkdir(targetDir, { recursive: true });
+    await writeFile(sourcePath, JSON.stringify({ mcpServers: { bad: { args: [] } } }, null, 2));
+
+    await mergeMcpConfig(targetDir, sourcePath);
+
+    const merged = await readJson<{ mcpServers: Record<string, { command: string }> }>(
+      join(targetDir, 'mcp.json')
+    );
+
+    expect(merged.mcpServers).toEqual({});
   });
 });

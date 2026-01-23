@@ -46,6 +46,14 @@ Install from a custom template directory:
 aipm install --source ./my-templates
 ```
 
+### Choosing a Template Pack
+
+Templates are stored under `templates/<template-name>/`. Install a specific pack with:
+
+```bash
+aipm install --template default
+```
+
 ### MCP Configuration
 
 Merge MCP server configurations:
@@ -55,6 +63,18 @@ aipm install --mcp ./mcp.json
 ```
 
 ## Template Structure
+
+The built-in templates live under `templates/<template-name>/`, for example:
+
+```
+templates/
+  default/
+    agents/
+    prompts/
+    instructions/
+    skills/
+    mcp.json
+```
 
 The package includes the following types of templates:
 
@@ -134,7 +154,7 @@ You can create your own templates by following these naming conventions:
 - Instruction files: `*.instructions.md`
 - Skill directories: `*.skill/`
 
-Organize them in a directory structure and use the `--source` option to install them.
+Organize them under `templates/<template-name>/` or in any standalone directory and use the `--template` or `--source` option to install them.
 
 ## MCP Configuration
 

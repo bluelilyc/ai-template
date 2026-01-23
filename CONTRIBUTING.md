@@ -46,19 +46,20 @@ node dist/cli.js install --help
 
 To add new templates:
 
-1. Create your template file in the appropriate directory:
-   - `templates/agents/` for `.agent.md` files
-   - `templates/prompts/` for `.prompt.md` files
-   - `templates/instructions/` for `.instructions.md` files
-   - `templates/skills/` for `.skill` directories
+1. Create a new template pack under `templates/<template-name>/`
+2. Add files in the appropriate directories:
+   - `templates/<template-name>/agents/` for `.agent.md` files
+   - `templates/<template-name>/prompts/` for `.prompt.md` files
+   - `templates/<template-name>/instructions/` for `.instructions.md` files
+   - `templates/<template-name>/skills/` for `.skill` directories
 
-2. Follow the naming conventions:
+3. Follow the naming conventions:
    - Agent files: `name.agent.md`
    - Prompt files: `name.prompt.md`
    - Instruction files: `name.instructions.md`
    - Skill directories: `name.skill/`
 
-3. Include clear documentation in your template
+4. Include clear documentation in your template
 
 ## Code Style
 

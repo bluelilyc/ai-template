@@ -21,7 +21,8 @@ program
   .description('Install templates into your repository')
   .option('-t, --target <type>', 'Target system: claude or copilot', 'copilot')
   .option('-p, --path <path>', 'Custom installation path (overrides default)')
-  .option('-s, --source <path>', 'Source directory containing templates (default: ./templates)')
+  .option('-s, --source <path>', 'Source directory containing templates (default: ./templates/<template>)')
+  .option('--template <name>', 'Template name under ./templates (default: default)', 'default')
   .option('--mcp <file>', 'Path to mcp.json file to merge')
   .action(async (options) => {
     try {
@@ -35,7 +36,7 @@ program
       // Determine source directory
       const sourceDir = options.source 
         ? resolve(process.cwd(), options.source)
-        : join(__dirname, '..', 'templates');
+        : join(__dirname, '..', 'templates', options.template);
 
       // Determine target directory
       const targetPath = options.path 

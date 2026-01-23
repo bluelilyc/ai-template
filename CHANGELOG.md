@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Code quality instructions
   - Git workflow instructions
   - Testing skill package
+- Template packs stored under `templates/<template-name>/`
 - Comprehensive documentation and usage examples
 - TypeScript implementation with full type safety
 - Vite bundler for optimized builds

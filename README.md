@@ -51,7 +51,7 @@ aipm install --source ./my-templates
 Templates are stored under `templates/<template-name>/`. By default, all packs are installed. Install a specific pack with:
 
 ```bash
-aipm install --template default
+aipm install --template quality-engineer
 ```
 
 ### MCP Configuration
@@ -68,12 +68,10 @@ The built-in templates live under `templates/<template-name>/`, for example:
 
 ```
 templates/
-  default/
+  quality-engineer/
     agents/
     prompts/
     instructions/
-    skills/
-    mcp.json
 ```
 
 The package includes the following types of templates:
@@ -82,28 +80,23 @@ The package includes the following types of templates:
 
 Agent files define AI agents with specific roles and capabilities:
 
-- `code-review.agent.md` - Code review specialist
-- `docs-writer.agent.md` - Documentation writer
+- `quality-engineer.agent.md` - Quality engineering specialist
 
 ### Prompts (`.prompt.md`)
 
 Reusable prompt templates for common tasks:
 
-- `bug-fix.prompt.md` - Bug fix workflow
-- `feature.prompt.md` - Feature implementation workflow
+- `quality-review.prompt.md` - Quality review checklist
 
 ### Instructions (`.instructions.md`)
 
 General guidelines and best practices:
 
-- `code-quality.instructions.md` - Code quality standards
-- `git-workflow.instructions.md` - Git workflow practices
+- `quality-engineer.instructions.md` - Quality engineering standards
 
 ### Skills (`.skill` directories)
 
-Complete skill packages with examples and documentation:
-
-- `testing.skill/` - Testing capabilities with examples
+Skill packages can be added under `skills/` as needed.
 
 ## Directory Structure
 
@@ -114,16 +107,12 @@ Templates are installed to `.github/` (no `copilot` subdirectory):
 ```
 .github/
 ├── agents/
-│   ├── code-review.agent.md
-│   └── docs-writer.agent.md
+│   └── quality-engineer.agent.md
 ├── prompts/
-│   ├── bug-fix.prompt.md
-│   └── feature.prompt.md
+│   └── quality-review.prompt.md
 ├── instructions/
-│   ├── code-quality.instructions.md
-│   └── git-workflow.instructions.md
+│   └── quality-engineer.instructions.md
 └── skills/
-  └── testing.skill/
 ```
 
 ### Claude
@@ -133,16 +122,12 @@ Templates are installed to `.github/claude/`:
 ```
 .github/claude/
 ├── agents/
-│   ├── code-review.agent.md
-│   └── docs-writer.agent.md
+│   └── quality-engineer.agent.md
 ├── prompts/
-│   ├── bug-fix.prompt.md
-│   └── feature.prompt.md
+│   └── quality-review.prompt.md
 ├── instructions/
-│   ├── code-quality.instructions.md
-│   └── git-workflow.instructions.md
+│   └── quality-engineer.instructions.md
 └── skills/
-    └── testing.skill/
 ```
 
 ## Creating Custom Templates

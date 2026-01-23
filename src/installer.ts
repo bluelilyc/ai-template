@@ -110,8 +110,12 @@ export async function writeJsonFile(filePath: string, data: any): Promise<void> 
 /**
  * Merge MCP configurations
  */
-export async function mergeMcpConfig(targetPath: string, sourcePath: string): Promise<void> {
-  const targetMcpPath = join(targetPath, 'mcp.json');
+export async function mergeMcpConfig(
+  targetPath: string,
+  sourcePath: string,
+  targetFileName: 'mcp.json' | '.mcp.json' = 'mcp.json'
+): Promise<void> {
+  const targetMcpPath = join(targetPath, targetFileName);
   const sourceMcpPath = sourcePath;
 
   // Read source MCP config
@@ -194,6 +198,37 @@ function isTemplateManifest(value: unknown): value is TemplateManifest {
   return typeof (value as { name?: unknown }).name === 'string';
 }
 
+function buildClaudePluginManifest(
+  pluginName: string,
+  manifest: TemplateManifest | null
+): Record<string, unknown> {
+  const description = manifest?.description ?? `AIPM template pack: ${pluginName}`;
+  const version = manifest?.version ?? '0.0.0';
+  const base: Record<string, unknown> = {
+    name: pluginName,
+    description,
+    version,
+  };
+
+  if (manifest?.author) {
+    base.author = typeof manifest.author === 'string' ? { name: manifest.author } : manifest.author;
+  }
+
+  if (manifest?.license) {
+    base.license = manifest.license;
+  }
+
+  if (manifest?.homepage) {
+    base.homepage = manifest.homepage;
+  }
+
+  if (manifest?.repository) {
+    base.repository = manifest.repository;
+  }
+
+  return base;
+}
+
 /**
  * Find all template files in a directory
  */
@@ -259,6 +294,18 @@ export async function installTemplates(
   targetDir: string,
   options: InstallOptions
 ): Promise<void> {
+  const isClaude = options.target === 'claude';
+  const manifest = isClaude ? await readTemplateManifest(templatesDir) : null;
+  const pluginName = manifest?.name ?? basename(templatesDir);
+  const pluginRoot = isClaude ? join(targetDir, pluginName) : targetDir;
+
+  if (isClaude) {
+    const pluginManifest = buildClaudePluginManifest(pluginName, manifest);
+    const pluginMetaDir = join(pluginRoot, '.claude-plugin');
+    await ensureDirectory(pluginMetaDir);
+    await writeJsonFile(join(pluginMetaDir, 'plugin.json'), pluginManifest);
+  }
+
   const templates = await findTemplateFiles(templatesDir);
 
   if (templates.length === 0) {
@@ -269,7 +316,7 @@ export async function installTemplates(
   console.log(`Found ${templates.length} template(s) to install`);
 
   for (const template of templates) {
-    const destPath = join(targetDir, template.destination);
+    const destPath = join(pluginRoot, template.destination);
 
     try {
       if (template.type === 'skill') {
@@ -289,7 +336,8 @@ export async function installTemplates(
   // Handle MCP config merge if requested
   if (options.mergeMcp && options.mcpSource) {
     try {
-      await mergeMcpConfig(targetDir, options.mcpSource);
+      const targetFileName = isClaude ? '.mcp.json' : 'mcp.json';
+      await mergeMcpConfig(pluginRoot, options.mcpSource, targetFileName);
     } catch (error: any) {
       console.error(`Warning: Failed to merge MCP configuration: ${error.message}`);
     }

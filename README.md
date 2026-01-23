@@ -141,20 +141,29 @@ Templates are installed to `.github/` (no `copilot` subdirectory):
 
 ### Claude
 
-Templates are installed to `.claude/` at the repo root:
+Templates are installed as Claude plugins under `.claude/<plugin-name>/` with a
+`.claude-plugin/plugin.json` manifest at each plugin root:
 
 ```
 .claude/
-├── agents/
-│   └── quality-engineer.agent.md
-│   └── csharp-engineer.agent.md
-├── prompts/
-│   └── quality-review.prompt.md
-│   └── csharp-review.prompt.md
-├── instructions/
-│   └── quality-engineer.instructions.md
-│   └── csharp-engineer.instructions.md
-└── skills/
+├── quality-engineer/
+│   ├── .claude-plugin/
+│   │   └── plugin.json
+│   ├── agents/
+│   │   └── quality-engineer.agent.md
+│   ├── prompts/
+│   │   └── quality-review.prompt.md
+│   └── instructions/
+│       └── quality-engineer.instructions.md
+└── csharp-engineer/
+  ├── .claude-plugin/
+  │   └── plugin.json
+  ├── agents/
+  │   └── csharp-engineer.agent.md
+  ├── prompts/
+  │   └── csharp-review.prompt.md
+  └── instructions/
+    └── csharp-engineer.instructions.md
 ```
 
 ## Creating Custom Templates

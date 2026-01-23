@@ -116,6 +116,10 @@ describe('installTemplates', () => {
     const targetDir = join(workDir, '.claude');
 
     await mkdir(join(templateDir, 'agents'), { recursive: true });
+    await writeFile(
+      join(templateDir, 'template.json'),
+      JSON.stringify({ name: 'quality-engineer', version: '1.2.3' }, null, 2)
+    );
     await writeFile(join(templateDir, 'agents', 'quality-engineer.agent.md'), 'agent-content');
 
     await installTemplates(templateDir, targetDir, {
@@ -125,10 +129,61 @@ describe('installTemplates', () => {
     });
 
     const installed = await readFile(
-      join(targetDir, 'agents', 'quality-engineer.agent.md'),
+      join(targetDir, 'quality-engineer', 'agents', 'quality-engineer.agent.md'),
       'utf-8'
     );
+    const pluginManifest = await readJson<{ name: string; version: string; description: string }>(
+      join(targetDir, 'quality-engineer', '.claude-plugin', 'plugin.json')
+    );
     expect(installed).toBe('agent-content');
+    expect(pluginManifest.name).toBe('quality-engineer');
+    expect(pluginManifest.version).toBe('1.2.3');
+  });
+
+  it('writes Claude plugin manifest and .mcp.json when merging MCP', async () => {
+    const templateDir = join(workDir, 'pack');
+    const targetDir = join(workDir, '.claude');
+    const sourcePath = join(workDir, 'source-mcp.json');
+
+    await mkdir(join(templateDir, 'agents'), { recursive: true });
+    await writeFile(
+      join(templateDir, 'template.json'),
+      JSON.stringify({ name: 'quality-engineer', description: 'QE pack' }, null, 2)
+    );
+    await writeFile(join(templateDir, 'agents', 'quality-engineer.agent.md'), 'agent-content');
+    await writeFile(
+      sourcePath,
+      JSON.stringify(
+        {
+          mcpServers: {
+            filesystem: {
+              command: 'npx',
+              args: ['-y', '@modelcontextprotocol/server-filesystem', '/tmp'],
+            },
+          },
+        },
+        null,
+        2
+      )
+    );
+
+    await installTemplates(templateDir, targetDir, {
+      target: 'claude',
+      targetPath: targetDir,
+      mergeMcp: true,
+      mcpSource: sourcePath,
+    });
+
+    const pluginManifest = await readJson<{ name: string; description: string }>(
+      join(targetDir, 'quality-engineer', '.claude-plugin', 'plugin.json')
+    );
+    const mcpConfig = await readJson<{ mcpServers: Record<string, { command: string }> }>(
+      join(targetDir, 'quality-engineer', '.mcp.json')
+    );
+
+    expect(pluginManifest.name).toBe('quality-engineer');
+    expect(pluginManifest.description).toBe('QE pack');
+    expect(mcpConfig.mcpServers.filesystem.command).toBe('npx');
   });
 });
 

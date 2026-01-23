@@ -5,7 +5,7 @@ applyTo: '**/*.{ts,tsx,cts,mts}'
 
 # TypeScript Development
 
-> These instructions assume projects are built with TypeScript 5.x (or newer) compiling to an ES2022 JavaScript baseline. Adjust guidance if your runtime requires older language targets or down-level transpilation.
+You must follow these guidelines for all TypeScript code to ensure code quality, maintainability, and consistency across the codebase.
 
 ## Core Intent
 

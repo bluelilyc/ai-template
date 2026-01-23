@@ -274,6 +274,12 @@ export async function findTemplateFiles(baseDir: string): Promise<TemplateFile[]
               destination: relPath,
               type: 'instruction',
             });
+          } else if (entry.name === 'mcp.json' || entry.name === '.mcp.json') {
+            files.push({
+              source: fullPath,
+              destination: relPath,
+              type: 'mcp',
+            });
           }
         }
       }
@@ -316,13 +322,19 @@ export async function installTemplates(
   console.log(`Found ${templates.length} template(s) to install`);
 
   for (const template of templates) {
-    const destPath = join(pluginRoot, template.destination);
+    const destPath =
+      template.type === 'mcp'
+        ? join(pluginRoot, isClaude ? '.mcp.json' : 'mcp.json')
+        : join(pluginRoot, template.destination);
 
     try {
       if (template.type === 'skill') {
         // Copy entire skill directory
         await copyDirectory(template.source, destPath);
         console.log(`✓ Installed skill directory: ${template.destination}`);
+      } else if (template.type === 'mcp') {
+        await copyFile(template.source, destPath);
+        console.log(`✓ Installed MCP config: ${basename(destPath)}`);
       } else {
         // Copy individual file
         await copyFile(template.source, destPath);

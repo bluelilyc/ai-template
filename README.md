@@ -80,6 +80,7 @@ templates/
     agents/
     prompts/
     instructions/
+    .mcp.json
     template.json
   csharp-engineer/
     agents/
@@ -114,6 +115,10 @@ General guidelines and best practices:
 ### Manifest (`template.json`)
 
 Each template pack can include a `template.json` manifest modeled after the Claude Code `plugin.json` format. AIPM uses this for metadata (name, version, description) and does not install it into the target directory.
+
+### MCP Config (`mcp.json` / `.mcp.json`)
+
+Templates can include MCP server configurations. For Claude plugin installs, AIPM writes `.mcp.json` at the plugin root. For Copilot installs, AIPM writes `mcp.json` at the target root.
 
 ### Skills (`.skill` directories)
 

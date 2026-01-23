@@ -8,7 +8,7 @@ export interface InstallOptions {
 export interface TemplateFile {
   source: string;
   destination: string;
-  type: 'agent' | 'prompt' | 'instruction' | 'skill';
+  type: 'agent' | 'prompt' | 'instruction' | 'skill' | 'mcp';
 }
 
 export interface TemplateManifest {

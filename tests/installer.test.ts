@@ -97,6 +97,21 @@ describe('installTemplates', () => {
 
     await mkdir(join(templateDir, 'agents'), { recursive: true });
     await writeFile(join(templateDir, 'agents', 'quality-engineer.agent.md'), 'agent-content');
+    await writeFile(
+      join(templateDir, 'mcp.json'),
+      JSON.stringify(
+        {
+          mcpServers: {
+            playwright: {
+              command: 'npx',
+              args: ['-y', '@modelcontextprotocol/server-playwright'],
+            },
+          },
+        },
+        null,
+        2
+      )
+    );
 
     await installTemplates(templateDir, targetDir, {
       target: 'copilot',
@@ -108,7 +123,11 @@ describe('installTemplates', () => {
       join(targetDir, 'agents', 'quality-engineer.agent.md'),
       'utf-8'
     );
+    const mcpConfig = await readJson<{ mcpServers: Record<string, { command: string }> }>(
+      join(targetDir, 'mcp.json')
+    );
     expect(installed).toBe('agent-content');
+    expect(mcpConfig.mcpServers.playwright.command).toBe('npx');
   });
 
   it('installs Claude templates into the .claude directory', async () => {
@@ -119,6 +138,21 @@ describe('installTemplates', () => {
     await writeFile(
       join(templateDir, 'template.json'),
       JSON.stringify({ name: 'quality-engineer', version: '1.2.3' }, null, 2)
+    );
+    await writeFile(
+      join(templateDir, '.mcp.json'),
+      JSON.stringify(
+        {
+          mcpServers: {
+            playwright: {
+              command: 'npx',
+              args: ['-y', '@modelcontextprotocol/server-playwright'],
+            },
+          },
+        },
+        null,
+        2
+      )
     );
     await writeFile(join(templateDir, 'agents', 'quality-engineer.agent.md'), 'agent-content');
 
@@ -135,9 +169,13 @@ describe('installTemplates', () => {
     const pluginManifest = await readJson<{ name: string; version: string; description: string }>(
       join(targetDir, 'quality-engineer', '.claude-plugin', 'plugin.json')
     );
+    const mcpConfig = await readJson<{ mcpServers: Record<string, { command: string }> }>(
+      join(targetDir, 'quality-engineer', '.mcp.json')
+    );
     expect(installed).toBe('agent-content');
     expect(pluginManifest.name).toBe('quality-engineer');
     expect(pluginManifest.version).toBe('1.2.3');
+    expect(mcpConfig.mcpServers.playwright.command).toBe('npx');
   });
 
   it('writes Claude plugin manifest and .mcp.json when merging MCP', async () => {

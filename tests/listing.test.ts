@@ -31,7 +31,7 @@ describe('listTemplateManifests', () => {
 
     expect(listings).toEqual([
       { name: 'alpha', version: 'unknown' },
-      { name: 'beta-pack', version: '2.0.0' }
+      { name: 'beta-pack', version: '2.0.0' },
     ]);
   });
 });
@@ -40,7 +40,7 @@ describe('formatTemplateTable', () => {
   it('formats a table with headers and rows', () => {
     const listings = [
       { name: 'quality-engineer', version: '1.0.0' },
-      { name: 'alpha', version: 'unknown' }
+      { name: 'alpha', version: 'unknown' },
     ];
     const output = formatTemplateTable(listings);
 

@@ -1,6 +1,12 @@
 import { promises as fs } from 'fs';
 import { join, dirname, basename } from 'path';
-import type { InstallOptions, TemplateFile, McpConfig, McpServerConfig, TemplateManifest } from './types.js';
+import type {
+  InstallOptions,
+  TemplateFile,
+  McpConfig,
+  McpServerConfig,
+  TemplateManifest,
+} from './types.js';
 
 /**
  * Get the target directory based on the installation target (Claude or Copilot)
@@ -9,7 +15,7 @@ export function getTargetDirectory(target: 'claude' | 'copilot', customPath?: st
   if (customPath) {
     return customPath;
   }
-  
+
   // Default paths based on target
   if (target === 'claude') {
     return '.github/claude';
@@ -44,13 +50,13 @@ export async function copyFile(source: string, destination: string): Promise<voi
  */
 export async function copyDirectory(source: string, destination: string): Promise<void> {
   await ensureDirectory(destination);
-  
+
   const entries = await fs.readdir(source, { withFileTypes: true });
-  
+
   for (const entry of entries) {
     const sourcePath = join(source, entry.name);
     const destPath = join(destination, entry.name);
-    
+
     if (entry.isDirectory()) {
       await copyDirectory(sourcePath, destPath);
     } else {
@@ -79,7 +85,7 @@ export async function readJsonFile(filePath: string): Promise<any> {
  */
 export async function readTemplateManifest(templateDir: string): Promise<TemplateManifest | null> {
   const manifestPath = join(templateDir, 'template.json');
-  const manifest = await readJsonFile(manifestPath) as unknown;
+  const manifest = (await readJsonFile(manifestPath)) as unknown;
 
   if (!manifest) {
     return null;
@@ -104,26 +110,23 @@ export async function writeJsonFile(filePath: string, data: any): Promise<void> 
 /**
  * Merge MCP configurations
  */
-export async function mergeMcpConfig(
-  targetPath: string,
-  sourcePath: string
-): Promise<void> {
+export async function mergeMcpConfig(targetPath: string, sourcePath: string): Promise<void> {
   const targetMcpPath = join(targetPath, 'mcp.json');
   const sourceMcpPath = sourcePath;
-  
+
   // Read source MCP config
-  const sourceMcp = await readJsonFile(sourceMcpPath) as unknown;
+  const sourceMcp = (await readJsonFile(sourceMcpPath)) as unknown;
   if (!isMcpConfig(sourceMcp) || !sourceMcp.mcpServers) {
     console.log('No MCP servers found in source configuration');
     return;
   }
-  
+
   // Read or initialize target MCP config
-  let targetMcp: McpConfig = await readJsonFile(targetMcpPath) || { mcpServers: {} };
+  let targetMcp: McpConfig = (await readJsonFile(targetMcpPath)) || { mcpServers: {} };
   if (!targetMcp.mcpServers) {
     targetMcp.mcpServers = {};
   }
-  
+
   // Merge configurations
   for (const [serverName, serverConfig] of Object.entries(sourceMcp.mcpServers)) {
     if (!isMcpServerConfig(serverConfig)) {
@@ -137,7 +140,7 @@ export async function mergeMcpConfig(
       console.log(`Added MCP server: ${serverName}`);
     }
   }
-  
+
   // Write merged configuration
   await writeJsonFile(targetMcpPath, targetMcp);
 }
@@ -196,22 +199,22 @@ function isTemplateManifest(value: unknown): value is TemplateManifest {
  */
 export async function findTemplateFiles(baseDir: string): Promise<TemplateFile[]> {
   const files: TemplateFile[] = [];
-  
+
   async function scanDirectory(dir: string, relativePath: string = '') {
     try {
       const entries = await fs.readdir(dir, { withFileTypes: true });
-      
+
       for (const entry of entries) {
         const fullPath = join(dir, entry.name);
         const relPath = join(relativePath, entry.name);
-        
+
         if (entry.isDirectory()) {
           // Check if it's a skill directory
           if (entry.name.endsWith('.skill')) {
             files.push({
               source: fullPath,
               destination: relPath,
-              type: 'skill'
+              type: 'skill',
             });
           } else {
             await scanDirectory(fullPath, relPath);
@@ -222,19 +225,19 @@ export async function findTemplateFiles(baseDir: string): Promise<TemplateFile[]
             files.push({
               source: fullPath,
               destination: relPath,
-              type: 'agent'
+              type: 'agent',
             });
           } else if (entry.name.endsWith('.prompt.md')) {
             files.push({
               source: fullPath,
               destination: relPath,
-              type: 'prompt'
+              type: 'prompt',
             });
           } else if (entry.name.endsWith('.instructions.md')) {
             files.push({
               source: fullPath,
               destination: relPath,
-              type: 'instruction'
+              type: 'instruction',
             });
           }
         }
@@ -243,7 +246,7 @@ export async function findTemplateFiles(baseDir: string): Promise<TemplateFile[]
       // Directory doesn't exist or not readable
     }
   }
-  
+
   await scanDirectory(baseDir);
   return files;
 }
@@ -257,17 +260,17 @@ export async function installTemplates(
   options: InstallOptions
 ): Promise<void> {
   const templates = await findTemplateFiles(templatesDir);
-  
+
   if (templates.length === 0) {
     console.log('No template files found to install');
     return;
   }
-  
+
   console.log(`Found ${templates.length} template(s) to install`);
-  
+
   for (const template of templates) {
     const destPath = join(targetDir, template.destination);
-    
+
     try {
       if (template.type === 'skill') {
         // Copy entire skill directory
@@ -282,7 +285,7 @@ export async function installTemplates(
       console.error(`✗ Failed to install ${template.destination}: ${error.message}`);
     }
   }
-  
+
   // Handle MCP config merge if requested
   if (options.mergeMcp && options.mcpSource) {
     try {

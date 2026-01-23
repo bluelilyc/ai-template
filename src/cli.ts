@@ -52,7 +52,7 @@ program
       }
 
       // Determine target directory
-      const targetPath = options.path 
+      const targetPath = options.path
         ? resolve(process.cwd(), options.path)
         : resolve(process.cwd(), getTargetDirectory(target));
 
@@ -63,7 +63,7 @@ program
         target,
         targetPath,
         mergeMcp: !!options.mcp,
-        mcpSource: options.mcp ? resolve(process.cwd(), options.mcp) : undefined
+        mcpSource: options.mcp ? resolve(process.cwd(), options.mcp) : undefined,
       };
 
       for (const templateDir of templateDirs) {
@@ -73,7 +73,7 @@ program
         console.log(`Installing template pack: ${label}${version}`);
         await installTemplates(templateDir, targetPath, installOptions);
       }
-      
+
       console.log('\n✓ Installation complete!');
     } catch (error: any) {
       console.error(`\n✗ Installation failed: ${error.message}`);

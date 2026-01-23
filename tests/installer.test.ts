@@ -7,7 +7,7 @@ import {
   findTemplateFiles,
   installTemplates,
   mergeMcpConfig,
-  readTemplateManifest
+  readTemplateManifest,
 } from '../src/installer.js';
 
 let workDir: string;
@@ -49,19 +49,27 @@ describe('findTemplateFiles', () => {
 
     await writeFile(join(baseDir, 'agents', 'quality-engineer.agent.md'), 'agent');
     await writeFile(join(baseDir, 'prompts', 'quality-review.prompt.md'), 'prompt');
-    await writeFile(join(baseDir, 'instructions', 'quality-engineer.instructions.md'), 'instructions');
-    await writeFile(join(baseDir, 'template.json'), JSON.stringify({ name: 'quality-engineer' }, null, 2));
+    await writeFile(
+      join(baseDir, 'instructions', 'quality-engineer.instructions.md'),
+      'instructions'
+    );
+    await writeFile(
+      join(baseDir, 'template.json'),
+      JSON.stringify({ name: 'quality-engineer' }, null, 2)
+    );
 
     const files = await findTemplateFiles(baseDir);
     const destinations = files.map((file) => file.destination).sort();
     const types = files.map((file) => file.type).sort();
 
-    expect(destinations).toEqual([
-      join('agents', 'quality-engineer.agent.md'),
-      join('instructions', 'quality-engineer.instructions.md'),
-      join('prompts', 'quality-review.prompt.md'),
-      join('skills', 'testing.skill')
-    ].sort());
+    expect(destinations).toEqual(
+      [
+        join('agents', 'quality-engineer.agent.md'),
+        join('instructions', 'quality-engineer.instructions.md'),
+        join('prompts', 'quality-review.prompt.md'),
+        join('skills', 'testing.skill'),
+      ].sort()
+    );
 
     expect(types).toEqual(['agent', 'instruction', 'prompt', 'skill'].sort());
   });
@@ -93,10 +101,13 @@ describe('installTemplates', () => {
     await installTemplates(templateDir, targetDir, {
       target: 'copilot',
       targetPath: targetDir,
-      mergeMcp: false
+      mergeMcp: false,
     });
 
-    const installed = await readFile(join(targetDir, 'agents', 'quality-engineer.agent.md'), 'utf-8');
+    const installed = await readFile(
+      join(targetDir, 'agents', 'quality-engineer.agent.md'),
+      'utf-8'
+    );
     expect(installed).toBe('agent-content');
   });
 });
@@ -110,33 +121,41 @@ describe('mergeMcpConfig', () => {
 
     await writeFile(
       join(targetDir, 'mcp.json'),
-      JSON.stringify({
-        mcpServers: {
-          existing: {
-            command: 'node',
-            args: ['server.js']
-          }
-        }
-      }, null, 2)
+      JSON.stringify(
+        {
+          mcpServers: {
+            existing: {
+              command: 'node',
+              args: ['server.js'],
+            },
+          },
+        },
+        null,
+        2
+      )
     );
 
     await writeFile(
       sourcePath,
-      JSON.stringify({
-        mcpServers: {
-          existing: {
-            command: 'node',
-            args: ['should-not-overwrite.js']
+      JSON.stringify(
+        {
+          mcpServers: {
+            existing: {
+              command: 'node',
+              args: ['should-not-overwrite.js'],
+            },
+            valid: {
+              command: 'npx',
+              args: ['-y', 'server'],
+            },
+            invalid: {
+              args: ['missing-command'],
+            },
           },
-          valid: {
-            command: 'npx',
-            args: ['-y', 'server']
-          },
-          invalid: {
-            args: ['missing-command']
-          }
-        }
-      }, null, 2)
+        },
+        null,
+        2
+      )
     );
 
     await mergeMcpConfig(targetDir, sourcePath);

@@ -6,21 +6,21 @@ export default defineConfig({
     lib: {
       entry: {
         cli: resolve(__dirname, 'src/cli.ts'),
-        index: resolve(__dirname, 'src/index.ts')
+        index: resolve(__dirname, 'src/index.ts'),
       },
       formats: ['es'],
-      fileName: (format, entryName) => `${entryName}.js`
+      fileName: (format, entryName) => `${entryName}.js`,
     },
     rollupOptions: {
-      external: ['fs', 'path', 'commander', 'fs/promises', 'url']
+      external: ['fs', 'path', 'commander', 'fs/promises', 'url'],
     },
     target: 'node18',
     outDir: 'dist',
-    emptyOutDir: true
+    emptyOutDir: true,
   },
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src')
-    }
-  }
+      '@': resolve(__dirname, 'src'),
+    },
+  },
 });

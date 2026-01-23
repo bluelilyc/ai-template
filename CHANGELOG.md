@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2026-01-22
 
 ### Added
+
 - Initial release of AIPM (AI Package Manager) CLI tool
 - Command-line interface for installing AI templates
 - Support for GitHub Copilot directory structure (`.github/`)
@@ -34,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ES module support
 
 ### Technical Details
+
 - Built with Node.js and TypeScript
 - Bundled with Vite for optimal performance
 - Uses Commander.js for CLI argument parsing

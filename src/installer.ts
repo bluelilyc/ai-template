@@ -18,7 +18,7 @@ export function getTargetDirectory(target: 'claude' | 'copilot', customPath?: st
 
   // Default paths based on target
   if (target === 'claude') {
-    return '.github/claude';
+    return '.claude';
   } else {
     return '.github';
   }

@@ -27,7 +27,7 @@ afterEach(async () => {
 
 describe('getTargetDirectory', () => {
   it('returns claude path for claude target', () => {
-    expect(getTargetDirectory('claude')).toBe('.github/claude');
+    expect(getTargetDirectory('claude')).toBe('.claude');
   });
 
   it('returns .github for copilot target', () => {
@@ -100,6 +100,26 @@ describe('installTemplates', () => {
 
     await installTemplates(templateDir, targetDir, {
       target: 'copilot',
+      targetPath: targetDir,
+      mergeMcp: false,
+    });
+
+    const installed = await readFile(
+      join(targetDir, 'agents', 'quality-engineer.agent.md'),
+      'utf-8'
+    );
+    expect(installed).toBe('agent-content');
+  });
+
+  it('installs Claude templates into the .claude directory', async () => {
+    const templateDir = join(workDir, 'pack');
+    const targetDir = join(workDir, '.claude');
+
+    await mkdir(join(templateDir, 'agents'), { recursive: true });
+    await writeFile(join(templateDir, 'agents', 'quality-engineer.agent.md'), 'agent-content');
+
+    await installTemplates(templateDir, targetDir, {
+      target: 'claude',
       targetPath: targetDir,
       mergeMcp: false,
     });

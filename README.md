@@ -141,10 +141,10 @@ Templates are installed to `.github/` (no `copilot` subdirectory):
 
 ### Claude
 
-Templates are installed to `.github/claude/`:
+Templates are installed to `.claude/` at the repo root:
 
 ```
-.github/claude/
+.claude/
 ├── agents/
 │   └── quality-engineer.agent.md
 │   └── csharp-engineer.agent.md

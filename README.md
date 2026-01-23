@@ -81,6 +81,11 @@ templates/
     prompts/
     instructions/
     template.json
+  csharp-engineer/
+    agents/
+    prompts/
+    instructions/
+    template.json
 ```
 
 The package includes the following types of templates:
@@ -90,18 +95,21 @@ The package includes the following types of templates:
 Agent files define AI agents with specific roles and capabilities:
 
 - `quality-engineer.agent.md` - Quality engineering specialist
+- `csharp-engineer.agent.md` - C#/.NET engineering specialist
 
 ### Prompts (`.prompt.md`)
 
 Reusable prompt templates for common tasks:
 
 - `quality-review.prompt.md` - Quality review checklist
+- `csharp-review.prompt.md` - C# review checklist
 
 ### Instructions (`.instructions.md`)
 
 General guidelines and best practices:
 
 - `quality-engineer.instructions.md` - Quality engineering standards
+- `csharp-engineer.instructions.md` - C#/.NET engineering standards
 
 ### Manifest (`template.json`)
 
@@ -121,10 +129,13 @@ Templates are installed to `.github/` (no `copilot` subdirectory):
 .github/
 ├── agents/
 │   └── quality-engineer.agent.md
+│   └── csharp-engineer.agent.md
 ├── prompts/
 │   └── quality-review.prompt.md
+│   └── csharp-review.prompt.md
 ├── instructions/
 │   └── quality-engineer.instructions.md
+│   └── csharp-engineer.instructions.md
 └── skills/
 ```
 
@@ -136,10 +147,13 @@ Templates are installed to `.github/claude/`:
 .github/claude/
 ├── agents/
 │   └── quality-engineer.agent.md
+│   └── csharp-engineer.agent.md
 ├── prompts/
 │   └── quality-review.prompt.md
+│   └── csharp-review.prompt.md
 ├── instructions/
 │   └── quality-engineer.instructions.md
+│   └── csharp-engineer.instructions.md
 └── skills/
 ```
 

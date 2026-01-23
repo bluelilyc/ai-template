@@ -1,0 +1,9 @@
+{
+  "name": "csharp-engineer",
+  "version": "1.0.0",
+  "description": "C#/.NET engineering templates for reliable, maintainable services.",
+  "author": "AIPM",
+  "license": "MIT",
+  "keywords": ["csharp", "dotnet", "backend"],
+  "tags": ["csharp-engineer", "dotnet"]
+}

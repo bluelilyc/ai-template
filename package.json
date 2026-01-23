@@ -1,0 +1,46 @@
+{
+  "name": "ai-template",
+  "version": "1.0.0",
+  "description": "A CLI tool to install agent templates, instructions, prompts, and skills for GitHub Copilot or Claude",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "ai-template": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "template",
+    "cli",
+    "github-copilot",
+    "claude"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluelilyc/ai-template.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bluelilyc/ai-template/issues"
+  },
+  "homepage": "https://github.com/bluelilyc/ai-template#readme",
+  "dependencies": {
+    "commander": "^12.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "vite": "^5.0.0"
+  }
+}

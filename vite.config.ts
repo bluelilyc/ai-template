@@ -12,7 +12,17 @@ export default defineConfig({
       fileName: (format, entryName) => `${entryName}.js`,
     },
     rollupOptions: {
-      external: ['fs', 'path', 'commander', 'fs/promises', 'url'],
+      external: [
+        'child_process',
+        'commander',
+        'fs',
+        'fs/promises',
+        'path',
+        'process',
+        'readline/promises',
+        'url',
+        'util',
+      ],
     },
     target: 'node18',
     outDir: 'dist',

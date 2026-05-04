@@ -1,82 +1,101 @@
-# Contributing to AIPM (AI Package Manager)
+# Contributing to AIPM
 
-Thank you for your interest in contributing to AIPM (AI Package Manager)! This document provides guidelines for contributing to the project.
+Thank you for contributing to AIPM. The project is now centered on marketplace-driven VS Code agent plugins, not bundled template packs, so contributions should follow that model.
 
 ## Getting Started
 
-1. Fork the repository
-2. Clone your fork: `git clone https://github.com/your-username/aipm.git`
-3. Install dependencies: `npm install`
-4. Make your changes
-5. Build the project: `npm run build`
-6. Test your changes locally
+1. Fork the repository.
+2. Clone your fork:
 
-## Development
+   ```bash
+   git clone https://github.com/your-username/aipm.git
+   cd aipm
+   ```
 
-### Building
+3. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+4. Create a branch for your work.
+5. Make your changes.
+6. Run the validation commands before opening a pull request.
+
+## Development Workflow
+
+### Build
 
 ```bash
 npm run build
 ```
 
-### Type Checking
+### Typecheck
 
 ```bash
 npm run typecheck
 ```
 
-### Testing Locally
-
-After building, you can test the CLI locally:
+### Test
 
 ```bash
-# Link the package globally
-npm link
-
-# Test the installation
-mkdir test-repo && cd test-repo
-git init
-aipm install
-
-# Or test directly without linking
-node dist/cli.js install --help
+npm test
 ```
 
-## Adding New Templates
+### Local CLI Testing
 
-To add new templates:
+After building, test the CLI against a throwaway repository:
 
-1. Create a new template pack under `templates/<template-name>/`
-2. Add files in the appropriate directories:
-   - `templates/<template-name>/agents/` for `.agent.md` files
-   - `templates/<template-name>/prompts/` for `.prompt.md` files
-   - `templates/<template-name>/instructions/` for `.instructions.md` files
-   - `templates/<template-name>/skills/` for `.skill` directories
-3. Add a `template.json` manifest (modeled after Claude Code `plugin.json`) for template metadata
+```bash
+npm link
+mkdir test-repo
+cd test-repo
+git init
+aipm marketplace list
+node ../dist/cli.js plugin list
+```
 
-4. Follow the naming conventions:
-   - Agent files: `name.agent.md`
-   - Prompt files: `name.prompt.md`
-   - Instruction files: `name.instructions.md`
-   - Skill directories: `name.skill/`
+## What to Contribute
 
-5. Include clear documentation in your template
+Useful contribution areas include:
+
+- marketplace source parsing and sync behavior
+- marketplace and plugin manifest validation
+- plugin listing, install, update, and remove flows
+- `.github` and `.claude` install planning and file ownership tracking
+- CLI usability and output formatting
+- tests and fixtures for real marketplace shapes
+- documentation for the marketplace-based workflow
+
+## Marketplace and Plugin Expectations
+
+When contributing marketplace-related behavior, align with the repository's current model:
+
+- marketplaces are Git repositories with `.github/plugin/marketplace.json`
+- plugin roots resolve from `metadata.pluginRoot` plus the marketplace entry `source`
+- plugin manifests are discovered from the recognized VS Code-compatible manifest locations, including `.claude-plugin/plugin.json`
+- Copilot installs materialize into `.github`
+- Claude installs materialize into `.claude/<plugin-name>`
+
+If you add or adjust fixtures, prefer fixture-based marketplace repositories under `tests/fixtures/marketplaces/` instead of reintroducing bundled sample packs.
 
 ## Code Style
 
-- Use TypeScript for all source code
-- Follow the existing code style
-- Add type annotations where appropriate
-- Keep functions small and focused
-- Write clear, descriptive variable names
+- Use TypeScript for all source code.
+- Keep ESM imports explicit with `.js` extensions where required by the project.
+- Follow the existing code style and keep changes focused.
+- Add or update tests with behavioral changes.
+- Prefer small, single-purpose functions and explicit types over implicit behavior.
 
-## Submitting Changes
+## Pull Requests
 
-1. Create a new branch for your changes
-2. Make your changes with clear, descriptive commit messages
-3. Test your changes thoroughly
-4. Submit a pull request
+Before submitting a pull request:
 
-## Questions?
+1. Ensure your branch is up to date with the target branch.
+2. Run `npm test` and `npm run typecheck`.
+3. Update documentation when behavior or CLI commands change.
+4. Include a clear summary of the problem, the fix, and any compatibility implications.
 
-If you have questions or need help, please open an issue on GitHub.
+## Questions
+
+If you have questions or need help, open an issue on GitHub.

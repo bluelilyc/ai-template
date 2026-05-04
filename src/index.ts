@@ -1,11 +1,4 @@
 export {
-  installTemplates,
-  getTargetDirectory,
-  findTemplateFiles,
-  readTemplateManifest,
-} from './installer.js';
-export { formatTemplateTable, listTemplateManifests } from './listing.js';
-export {
   formatMarketplacePluginTable,
   formatMarketplaceRegistryTable,
   listConfiguredMarketplacePlugins,
@@ -17,6 +10,7 @@ export { createInstallPlan } from './install-planning.js';
 export {
   confirmInstallPlan,
   installMarketplacePlugin,
+  removeMarketplacePlugin,
   resolveMarketplacePlugin,
   updateMarketplacePlugins,
 } from './plugins.js';
@@ -61,7 +55,6 @@ export type {
   InstallPlanConflict,
   InstallPlanOperation,
   InstallPlanOptions,
-  InstallOptions,
   InstalledPluginManifestSnapshot,
   InstalledPluginRecord,
   InstallTarget,
@@ -70,9 +63,6 @@ export type {
   MarketplacePluginEntry,
   MarketplaceRecord,
   MarketplaceSyncResult,
-  TemplateFile,
-  McpConfig,
-  McpServerConfig,
   NormalizedMarketplaceSource,
   NormalizedPluginManifest,
   PluginListing,
@@ -80,10 +70,6 @@ export type {
   PluginDependency,
   PluginManifestComparison,
   PluginManifestLoadResult,
-  TemplateManifest,
+  RemovePluginResult,
 } from './types.js';
-export type {
-  InstalledPluginListing,
-  MarketplaceRegistryListing,
-  TemplateListing,
-} from './listing.js';
+export type { InstalledPluginListing, MarketplaceRegistryListing } from './listing.js';

@@ -3,7 +3,11 @@ import { cp, mkdtemp, readFile, rm, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import { dirname, join, resolve } from 'path';
 import { pathToFileURL } from 'url';
-import { installMarketplacePlugin, updateMarketplacePlugins } from '../src/plugins.js';
+import {
+  installMarketplacePlugin,
+  removeMarketplacePlugin,
+  updateMarketplacePlugins,
+} from '../src/plugins.js';
 import { registerMarketplace } from '../src/marketplaces.js';
 import { readAipmSettings } from '../src/settings.js';
 
@@ -150,5 +154,30 @@ describe('updateMarketplacePlugins', () => {
     await expect(
       readFile(join(workDir, '.github', 'skills', 'review-evidence', 'SKILL.md'), 'utf-8')
     ).rejects.toThrow();
+  });
+});
+
+describe('removeMarketplacePlugin', () => {
+  it('removes tracked files and clears the install record', async () => {
+    await installMarketplacePlugin(workDir, 'core', {
+      target: 'copilot',
+      force: true,
+    });
+
+    const results = await removeMarketplacePlugin(workDir, 'core', { target: 'copilot' });
+    const settings = await readAipmSettings(workDir);
+
+    expect(results).toEqual([
+      {
+        name: 'core',
+        target: 'copilot',
+        removedFiles: expect.arrayContaining([
+          '.github/agents/core.agent.md',
+          '.github/hooks.json',
+        ]),
+      },
+    ]);
+    await expect(readFile(join(workDir, '.github', 'agents', 'core.agent.md'), 'utf-8')).rejects.toThrow();
+    expect(settings.plugins).toEqual([]);
   });
 });

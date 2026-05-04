@@ -1,15 +1,14 @@
 {
   "name": "aipm",
   "version": "1.0.0",
-  "description": "AIPM (AI Package Manager) is a CLI tool to install agent templates, instructions, prompts, and skills for GitHub Copilot or Claude",
+  "description": "AIPM (AI Package Manager) is a CLI tool to manage VS Code agent plugin marketplaces and install plugins for GitHub Copilot or Claude",
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
     "aipm": "./dist/cli.js"
   },
   "files": [
-    "dist",
-    "templates"
+    "dist"
   ],
   "scripts": {
     "dev": "vite build --watch",
@@ -23,7 +22,8 @@
   "keywords": [
     "ai",
     "agent",
-    "template",
+    "plugin",
+    "marketplace",
     "cli",
     "github-copilot",
     "claude"
@@ -32,12 +32,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bluelilyc/ai-template.git"
+    "url": "https://github.com/bluelilyc/aipm.git"
   },
   "bugs": {
-    "url": "https://github.com/bluelilyc/ai-template/issues"
+    "url": "https://github.com/bluelilyc/aipm/issues"
   },
-  "homepage": "https://github.com/bluelilyc/ai-template#readme",
+  "homepage": "https://github.com/bluelilyc/aipm#readme",
   "dependencies": {
     "commander": "^12.0.0"
   },

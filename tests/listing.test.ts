@@ -1,13 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtemp, rm, mkdir, writeFile } from 'fs/promises';
+import { mkdtemp, rm } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import {
   formatMarketplacePluginTable,
-  formatTemplateTable,
+  formatMarketplaceRegistryTable,
   listMarketplacePlugins,
-  listTemplateManifests,
+  listRegisteredMarketplaces,
 } from '../src/listing.js';
+import { registerMarketplace } from '../src/marketplaces.js';
+import { pathToFileURL } from 'url';
 
 const marketplaceFixtureRoot = join(process.cwd(), 'tests', 'fixtures', 'marketplaces', 'bluelily');
 
@@ -19,51 +21,6 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await rm(workDir, { recursive: true, force: true });
-});
-
-describe('listTemplateManifests', () => {
-  it('returns sorted template listings with defaults', async () => {
-    const alphaDir = join(workDir, 'alpha');
-    const betaDir = join(workDir, 'beta');
-
-    await mkdir(alphaDir, { recursive: true });
-    await mkdir(betaDir, { recursive: true });
-
-    await writeFile(
-      join(betaDir, 'template.json'),
-      JSON.stringify({ name: 'beta-pack', version: '2.0.0' }, null, 2)
-    );
-
-    const listings = await listTemplateManifests(workDir);
-
-    expect(listings).toEqual([
-      { name: 'alpha', version: 'unknown' },
-      { name: 'beta-pack', version: '2.0.0' },
-    ]);
-  });
-});
-
-describe('formatTemplateTable', () => {
-  it('formats a table with headers and rows', () => {
-    const listings = [
-      { name: 'quality-engineer', version: '1.0.0' },
-      { name: 'alpha', version: 'unknown' },
-    ];
-    const output = formatTemplateTable(listings);
-
-    const nameWidth = Math.max('Plugin'.length, ...listings.map((item) => item.name.length));
-    const versionWidth = Math.max('Version'.length, ...listings.map((item) => item.version.length));
-    const header = `${'Plugin'.padEnd(nameWidth)}  ${'Version'.padEnd(versionWidth)}`;
-    const separator = `${'-'.repeat(nameWidth)}  ${'-'.repeat(versionWidth)}`;
-    const row1 = `${listings[0].name.padEnd(nameWidth)}  ${listings[0].version.padEnd(versionWidth)}`;
-    const row2 = `${listings[1].name.padEnd(nameWidth)}  ${listings[1].version.padEnd(versionWidth)}`;
-
-    const lines = output.split('\n');
-    expect(lines[0]).toBe(header);
-    expect(lines[1]).toBe(separator);
-    expect(lines[2]).toBe(row1);
-    expect(lines[3]).toBe(row2);
-  });
 });
 
 describe('listMarketplacePlugins', () => {
@@ -92,6 +49,36 @@ describe('listMarketplacePlugins', () => {
         marketplaceVersion: '0.2.0',
       },
     ]);
+  });
+});
+
+describe('listRegisteredMarketplaces', () => {
+  it('lists configured marketplaces from settings', async () => {
+    await registerMarketplace(workDir, pathToFileURL(marketplaceFixtureRoot).toString());
+
+    const listings = await listRegisteredMarketplaces(workDir);
+
+    expect(listings).toHaveLength(1);
+    expect(listings[0].name).toBe('bluelilyc-tools');
+    expect(listings[0].localPath).toBe('.aipm/cache/marketplaces/bluelily');
+  });
+});
+
+describe('formatMarketplaceRegistryTable', () => {
+  it('formats a registry listing table', () => {
+    const output = formatMarketplaceRegistryTable([
+      {
+        name: 'bluelilyc-tools',
+        source: 'file:///tmp/bluelily',
+        localPath: '.aipm/cache/marketplaces/bluelily',
+        lastSyncedAt: '2026-05-04T00:00:00.000Z',
+      },
+    ]);
+
+    const lines = output.split('\n');
+    expect(lines[0]).toContain('Marketplace');
+    expect(lines[0]).toContain('Local Path');
+    expect(lines[2]).toContain('bluelilyc-tools');
   });
 });
 

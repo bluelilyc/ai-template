@@ -1,6 +1,6 @@
 # AIPM (AI Package Manager)
 
-AIPM (AI Package Manager) is a CLI tool to install AI agent templates, instructions, prompts, and skills for GitHub Copilot or Claude Code.
+AIPM is a TypeScript CLI for managing VS Code agent plugin marketplaces and installing plugins into workspace-local GitHub Copilot or Claude customizations.
 
 ## Installation
 
@@ -8,222 +8,154 @@ AIPM (AI Package Manager) is a CLI tool to install AI agent templates, instructi
 npm install -g aipm
 ```
 
-Or use directly with npx:
+Or run it with `npx`:
 
 ```bash
-npx aipm install
+npx aipm marketplace list
 ```
 
 ## Usage
 
-### Basic Installation
+### Add a Marketplace
 
-Install all template packs for GitHub Copilot (default):
-
-```bash
-aipm install
-```
-
-Install all template packs for Claude:
+Register and sync a marketplace into `.aipm/cache/marketplaces`:
 
 ```bash
-aipm install --target claude
+aipm marketplace add anthropics/claude-code
 ```
 
-### Custom Installation Path
-
-Install to a custom directory:
+List configured marketplaces:
 
 ```bash
-aipm install --path /path/to/custom/directory
+aipm marketplace list
 ```
 
-### Using Custom Templates
-
-Install from a custom template directory (installs all packs under it):
+Sync one marketplace or all configured marketplaces:
 
 ```bash
-aipm install --source ./my-templates
+aipm marketplace sync
+aipm marketplace sync bluelilyc-tools
 ```
 
-### Choosing a Template Pack
+### Browse Available Plugins
 
-Templates are stored under `templates/<template-name>/`. By default, all packs are installed. Install a specific pack with:
+List plugins from all configured marketplaces:
 
 ```bash
-aipm install --template quality-engineer
+aipm plugin list
 ```
 
-### Listing Available Template Packs
-
-List available template packs from the source location:
+Filter plugin listing to a single marketplace:
 
 ```bash
-aipm list
+aipm plugin list --marketplace bluelilyc-tools
 ```
 
-### MCP Configuration
+### Install a Plugin
 
-Merge MCP server configurations:
+Install into GitHub Copilot workspace customizations:
 
 ```bash
-aipm install --mcp ./mcp.json
+aipm plugin install core --target copilot
 ```
 
-## Template Structure
+Install into Claude workspace customizations:
 
-The built-in templates live under `templates/<template-name>/`, for example:
-
-```
-templates/
-  quality-engineer/
-    agents/
-    prompts/
-    instructions/
-    .mcp.json
-    template.json
-  csharp-engineer/
-    agents/
-    prompts/
-    instructions/
-    template.json
+```bash
+aipm plugin install core --target claude
 ```
 
-The package includes the following types of templates:
+Skip overwrite confirmation prompts:
 
-### Agents (`.agent.md`)
+```bash
+aipm plugin install core --target copilot --force
+```
 
-Agent files define AI agents with specific roles and capabilities:
+### List Installed Plugins
 
-- `quality-engineer.agent.md` - Quality engineering specialist
-- `csharp-engineer.agent.md` - C#/.NET engineering specialist
+```bash
+aipm plugin installed
+```
 
-### Prompts (`.prompt.md`)
+### Update Installed Plugins
 
-Reusable prompt templates for common tasks:
+Update all installed plugins:
 
-- `quality-review.prompt.md` - Quality review checklist
-- `csharp-review.prompt.md` - C# review checklist
+```bash
+aipm plugin update
+```
 
-### Instructions (`.instructions.md`)
+Update a single plugin:
 
-General guidelines and best practices:
+```bash
+aipm plugin update core
+```
 
-- `quality-engineer.instructions.md` - Quality engineering standards
-- `csharp-engineer.instructions.md` - C#/.NET engineering standards
+### Remove an Installed Plugin
 
-### Manifest (`template.json`)
+```bash
+aipm plugin remove core --target copilot
+```
 
-Each template pack can include a `template.json` manifest modeled after the Claude Code `plugin.json` format. AIPM uses this for metadata (name, version, description) and does not install it into the target directory.
+## Workspace State
 
-### MCP Config (`mcp.json` / `.mcp.json`)
+AIPM stores workspace-local state in `.aipm/settings.json` and syncs configured marketplace repositories under `.aipm/cache/marketplaces/`.
 
-Templates can include MCP server configurations. For Claude plugin installs, AIPM writes `.mcp.json` at the plugin root. For Copilot installs, AIPM writes `mcp.json` at the target root.
+Each installed plugin record tracks:
 
-### Skills (`.skill` directories)
+- plugin name and installed version
+- source marketplace
+- selected target (`copilot` or `claude`)
+- cached plugin path
+- installed file ownership for safe updates and removals
 
-Skill packages can be added under `skills/` as needed.
+## Supported Marketplace Model
 
-## Directory Structure
+AIPM currently targets the VS Code agent plugin model. It supports marketplace repositories that expose `.github/plugin/marketplace.json`, with plugin roots resolved from `metadata.pluginRoot` plus each plugin entry's `source` field.
+
+Plugin manifests are discovered using the recognized VS Code-compatible manifest locations, including `.claude-plugin/plugin.json`.
+
+## Install Targets
 
 ### GitHub Copilot
 
-Templates are installed to `.github/` (no `copilot` subdirectory):
+For `--target copilot`, AIPM materializes plugin content into `.github/`.
 
-```
-.github/
-├── agents/
-│   └── quality-engineer.agent.md
-│   └── csharp-engineer.agent.md
-├── prompts/
-│   └── quality-review.prompt.md
-│   └── csharp-review.prompt.md
-├── instructions/
-│   └── quality-engineer.instructions.md
-│   └── csharp-engineer.instructions.md
-└── skills/
-```
+Current supported mappings:
+
+- agents to `.github/agents/`
+- skills to `.github/skills/`
+- hooks file to `.github/hooks.json`
 
 ### Claude
 
-Templates are installed as Claude plugins under `.claude/<plugin-name>/` with a
-`.claude-plugin/plugin.json` manifest at each plugin root:
+For `--target claude`, AIPM preserves plugin structure under `.claude/<plugin-name>/`.
 
-```
-.claude/
-├── quality-engineer/
-│   ├── .claude-plugin/
-│   │   └── plugin.json
-│   ├── agents/
-│   │   └── quality-engineer.agent.md
-│   ├── prompts/
-│   │   └── quality-review.prompt.md
-│   └── instructions/
-│       └── quality-engineer.instructions.md
-└── csharp-engineer/
-  ├── .claude-plugin/
-  │   └── plugin.json
-  ├── agents/
-  │   └── csharp-engineer.agent.md
-  ├── prompts/
-  │   └── csharp-review.prompt.md
-  └── instructions/
-    └── csharp-engineer.instructions.md
-```
+Current supported mappings:
 
-## Creating Custom Templates
+- agents under `.claude/<plugin-name>/agents/`
+- skills under `.claude/<plugin-name>/skills/`
+- hooks under `.claude/<plugin-name>/hooks/`
+- plugin manifest under `.claude/<plugin-name>/.claude-plugin/plugin.json`
 
-You can create your own templates by following these naming conventions:
+## Overwrite Behavior
 
-- Agent files: `*.agent.md`
-- Prompt files: `*.prompt.md`
-- Instruction files: `*.instructions.md`
-- Skill directories: `*.skill/`
-
-Organize them under `templates/<template-name>/` or in any standalone directory and use the `--template` or `--source` option to install them.
-
-## MCP Configuration
-
-The tool can merge MCP (Model Context Protocol) server configurations. Create an `mcp.json` file with your server configurations:
-
-```json
-{
-  "mcpServers": {
-    "filesystem": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/files"]
-    },
-    "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "your-token"
-      }
-    }
-  }
-}
-```
-
-Then merge it into your target directory:
-
-```bash
-aipm install --mcp ./mcp.json
-```
+When an install or update would overwrite tracked or unmanaged files, AIPM prompts by default. Use `--force` to bypass the prompt.
 
 ## Development
 
-### Building
+Build the package:
 
 ```bash
 npm install
 npm run build
 ```
 
-### Local Testing
+Run tests and typecheck:
 
 ```bash
-npm link
-aipm install
+npm test
+npm run typecheck
 ```
 
 ## License

@@ -1,10 +1,3 @@
-export interface InstallOptions {
-  target: 'claude' | 'copilot';
-  targetPath?: string;
-  mergeMcp?: boolean;
-  mcpSource?: string;
-}
-
 export type InstallTarget = 'claude' | 'copilot';
 
 export interface PluginAuthor {
@@ -127,6 +120,12 @@ export interface AipmSettings {
   plugins: InstalledPluginRecord[];
 }
 
+export interface RemovePluginResult {
+  name: string;
+  target: InstallTarget;
+  removedFiles: string[];
+}
+
 export interface PluginListing {
   marketplace: string;
   name: string;
@@ -164,32 +163,4 @@ export interface InstallPlanOptions {
   target: InstallTarget;
   force?: boolean;
   installedPlugins?: InstalledPluginRecord[];
-}
-
-export interface TemplateFile {
-  source: string;
-  destination: string;
-  type: 'agent' | 'prompt' | 'instruction' | 'skill' | 'mcp';
-}
-
-export interface TemplateManifest {
-  name: string;
-  version?: string;
-  description?: string;
-  author?: string | PluginAuthor;
-  license?: string;
-  homepage?: string;
-  repository?: string | { type?: string; url?: string };
-  keywords?: string[];
-  tags?: string[];
-}
-
-export interface McpServerConfig {
-  command: string;
-  args?: string[];
-  env?: Record<string, string>;
-}
-
-export interface McpConfig {
-  mcpServers?: Record<string, McpServerConfig>;
 }

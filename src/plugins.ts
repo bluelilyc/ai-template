@@ -12,12 +12,13 @@ import {
 import { readAipmSettings, writeAipmSettings } from './settings.js';
 import type {
   InstallPlan,
-  InstalledPluginRecord,
   InstallTarget,
+  InstalledPluginRecord,
   MarketplacePluginEntry,
   MarketplaceRecord,
   MarketplaceSyncResult,
   PluginManifestLoadResult,
+  RemovePluginResult,
 } from './types.js';
 
 interface ResolvePluginOptions {
@@ -34,6 +35,10 @@ interface UpdatePluginsOptions {
   target?: InstallTarget;
   force?: boolean;
   confirm?: (plan: InstallPlan) => Promise<boolean>;
+}
+
+interface RemovePluginOptions {
+  target?: InstallTarget;
 }
 
 export interface ResolvedMarketplacePlugin {
@@ -330,6 +335,67 @@ export async function updateMarketplacePlugins(
       result,
     });
   }
+
+  return results;
+}
+
+async function removeInstalledPluginFiles(
+  workspaceRoot: string,
+  plugin: InstalledPluginRecord
+): Promise<string[]> {
+  const cleanupRoot = getTargetCleanupRoot(workspaceRoot, plugin.target, plugin.name);
+  const removedFiles: string[] = [];
+
+  for (const installedFile of plugin.installedFiles) {
+    const absolutePath = resolve(workspaceRoot, installedFile);
+    if (!(await pathExists(absolutePath))) {
+      continue;
+    }
+
+    await fs.rm(absolutePath, { force: true });
+    await removeEmptyParentDirectories(absolutePath, cleanupRoot);
+    removedFiles.push(installedFile);
+  }
+
+  if (plugin.target === 'claude') {
+    const pluginRoot = resolve(workspaceRoot, '.claude', plugin.name);
+    await fs.rm(pluginRoot, { recursive: true, force: true });
+  }
+
+  return removedFiles;
+}
+
+/**
+ * Remove one installed plugin from the selected target and delete its tracked files.
+ */
+export async function removeMarketplacePlugin(
+  workspaceRoot: string,
+  pluginName: string,
+  options: RemovePluginOptions = {}
+): Promise<RemovePluginResult[]> {
+  const settings = await readAipmSettings(workspaceRoot);
+  const candidates = settings.plugins.filter(
+    (plugin) => plugin.name === pluginName && (!options.target || plugin.target === options.target)
+  );
+
+  if (candidates.length === 0) {
+    throw new Error(`Installed plugin not found: ${pluginName}`);
+  }
+
+  const results: RemovePluginResult[] = [];
+  for (const candidate of candidates) {
+    const removedFiles = await removeInstalledPluginFiles(workspaceRoot, candidate);
+    results.push({
+      name: candidate.name,
+      target: candidate.target,
+      removedFiles,
+    });
+  }
+
+  settings.plugins = settings.plugins.filter(
+    (plugin) => !(plugin.name === pluginName && (!options.target || plugin.target === options.target))
+  );
+  await writeAipmSettings(workspaceRoot, settings);
 
   return results;
 }

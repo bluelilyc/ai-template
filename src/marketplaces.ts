@@ -1,15 +1,22 @@
+import { execFile } from 'child_process';
 import { promises as fs } from 'fs';
-import { join, resolve } from 'path';
+import { basename, join, relative, resolve } from 'path';
+import { fileURLToPath } from 'url';
+import { promisify } from 'util';
 import type {
   AgentPluginManifest,
   MarketplaceManifest,
   MarketplacePluginEntry,
+  MarketplaceRecord,
+  MarketplaceSyncResult,
   NormalizedPluginManifest,
+  NormalizedMarketplaceSource,
   PluginAuthor,
   PluginDependency,
   PluginManifestComparison,
   PluginManifestLoadResult,
 } from './types.js';
+import { getAipmDirectory, readAipmSettings, writeAipmSettings } from './settings.js';
 
 export const MARKETPLACE_MANIFEST_RELATIVE_PATH = join('.github', 'plugin', 'marketplace.json');
 export const RECOGNIZED_PLUGIN_MANIFEST_PATHS = [
@@ -18,6 +25,8 @@ export const RECOGNIZED_PLUGIN_MANIFEST_PATHS = [
   join('.github', 'plugin', 'plugin.json'),
   join('.claude-plugin', 'plugin.json'),
 ] as const;
+
+const execFileAsync = promisify(execFile);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -105,6 +114,145 @@ function normalizePathList(value?: string | string[]): string[] {
   }
 
   return Array.isArray(value) ? value : [value];
+}
+
+function slugifySegment(value: string): string {
+  return value.replace(/[^a-zA-Z0-9-]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase();
+}
+
+async function pathExists(filePath: string): Promise<boolean> {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function runGitCommand(args: string[], cwd?: string): Promise<void> {
+  await execFileAsync('git', args, cwd ? { cwd } : undefined);
+}
+
+/**
+ * Resolve the cache root used for synced marketplace repositories.
+ */
+export function getMarketplaceCacheRoot(workspaceRoot: string): string {
+  return join(getAipmDirectory(workspaceRoot), 'cache', 'marketplaces');
+}
+
+/**
+ * Normalize a user-provided marketplace source into a syncable source descriptor.
+ */
+export function normalizeMarketplaceSource(source: string): NormalizedMarketplaceSource {
+  const trimmedSource = source.trim();
+
+  if (trimmedSource.startsWith('file://')) {
+    const filePath = fileURLToPath(trimmedSource);
+    return {
+      input: source,
+      kind: 'file',
+      resolvedSource: trimmedSource,
+      cacheKey: slugifySegment(basename(filePath) || 'marketplace'),
+      filePath,
+    };
+  }
+
+  if (/^[^/\s]+\/[^/\s]+$/.test(trimmedSource)) {
+    const [owner, repo] = trimmedSource.split('/');
+    return {
+      input: source,
+      kind: 'git',
+      resolvedSource: `https://github.com/${owner}/${repo}.git`,
+      cacheKey: slugifySegment(`${owner}-${repo}`),
+    };
+  }
+
+  if (/^https?:\/\/.+\.git$/i.test(trimmedSource)) {
+    const repoName = trimmedSource.split('/').at(-1)?.replace(/\.git$/i, '') ?? 'marketplace';
+    return {
+      input: source,
+      kind: 'git',
+      resolvedSource: trimmedSource,
+      cacheKey: slugifySegment(repoName),
+    };
+  }
+
+  if (/^git@.+:.+\.git$/i.test(trimmedSource)) {
+    const repoName = trimmedSource.split('/').at(-1)?.replace(/\.git$/i, '') ?? 'marketplace';
+    return {
+      input: source,
+      kind: 'git',
+      resolvedSource: trimmedSource,
+      cacheKey: slugifySegment(repoName),
+    };
+  }
+
+  throw new Error(`Unsupported marketplace source: ${source}`);
+}
+
+/**
+ * Sync a marketplace source into the workspace-local cache.
+ */
+export async function syncMarketplaceSource(
+  workspaceRoot: string,
+  normalizedSource: NormalizedMarketplaceSource
+): Promise<string> {
+  const cacheRoot = getMarketplaceCacheRoot(workspaceRoot);
+  const localPath = join(cacheRoot, normalizedSource.cacheKey);
+
+  await fs.mkdir(cacheRoot, { recursive: true });
+
+  if (normalizedSource.kind === 'file') {
+    if (!normalizedSource.filePath) {
+      throw new Error(`Marketplace file source is missing a file path: ${normalizedSource.input}`);
+    }
+
+    await fs.rm(localPath, { recursive: true, force: true });
+    await fs.cp(normalizedSource.filePath, localPath, { recursive: true, force: true });
+    return localPath;
+  }
+
+  if (await pathExists(localPath)) {
+    await runGitCommand(['pull', '--ff-only'], localPath);
+    return localPath;
+  }
+
+  await runGitCommand(['clone', normalizedSource.resolvedSource, localPath]);
+  return localPath;
+}
+
+/**
+ * Register a marketplace in `.aipm/settings.json` and sync it into the local cache.
+ */
+export async function registerMarketplace(
+  workspaceRoot: string,
+  source: string
+): Promise<MarketplaceSyncResult> {
+  const normalizedSource = normalizeMarketplaceSource(source);
+  const localPath = await syncMarketplaceSource(workspaceRoot, normalizedSource);
+  const manifest = await readMarketplaceManifest(localPath);
+  const settings = await readAipmSettings(workspaceRoot);
+
+  const record: MarketplaceRecord = {
+    name: manifest.name,
+    source,
+    resolvedSource: normalizedSource.resolvedSource,
+    localPath: relative(workspaceRoot, localPath),
+    lastSyncedAt: new Date().toISOString(),
+  };
+
+  settings.marketplaces = [
+    ...settings.marketplaces.filter((entry) => entry.name !== record.name),
+    record,
+  ].sort((left, right) => left.name.localeCompare(right.name));
+
+  await writeAipmSettings(workspaceRoot, settings);
+
+  return {
+    record,
+    manifest,
+    localPath,
+  };
 }
 
 /**

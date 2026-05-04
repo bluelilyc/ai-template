@@ -6,6 +6,13 @@ export {
 } from './installer.js';
 export { formatTemplateTable, listTemplateManifests } from './listing.js';
 export {
+  formatMarketplacePluginTable,
+  listConfiguredMarketplacePlugins,
+  listInstalledPlugins,
+  listMarketplacePlugins,
+} from './listing.js';
+export { createInstallPlan } from './install-planning.js';
+export {
   AIPM_DIRECTORY_NAME,
   AIPM_SETTINGS_FILE_NAME,
   AIPM_SETTINGS_VERSION,
@@ -23,19 +30,27 @@ export {
   compareMarketplaceEntryToPluginManifest,
   findPluginManifestPath,
   getMarketplaceManifestPath,
+  getMarketplaceCacheRoot,
   getRecognizedPluginManifestPaths,
   isMarketplaceManifest,
   isPluginManifest,
+  normalizeMarketplaceSource,
   normalizePluginManifest,
   parseMarketplaceManifest,
   parsePluginManifest,
+  registerMarketplace,
   readMarketplaceManifest,
   readPluginManifest,
   resolveMarketplacePluginRoot,
+  syncMarketplaceSource,
 } from './marketplaces.js';
 export type {
   AgentPluginManifest,
   AipmSettings,
+  InstallPlan,
+  InstallPlanConflict,
+  InstallPlanOperation,
+  InstallPlanOptions,
   InstallOptions,
   InstalledPluginManifestSnapshot,
   InstalledPluginRecord,
@@ -44,14 +59,17 @@ export type {
   MarketplaceMetadata,
   MarketplacePluginEntry,
   MarketplaceRecord,
+  MarketplaceSyncResult,
   TemplateFile,
   McpConfig,
   McpServerConfig,
+  NormalizedMarketplaceSource,
   NormalizedPluginManifest,
+  PluginListing,
   PluginAuthor,
   PluginDependency,
   PluginManifestComparison,
   PluginManifestLoadResult,
   TemplateManifest,
 } from './types.js';
-export type { TemplateListing } from './listing.js';
+export type { InstalledPluginListing, TemplateListing } from './listing.js';

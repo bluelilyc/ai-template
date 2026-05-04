@@ -42,6 +42,20 @@ export interface MarketplaceManifest {
   plugins: MarketplacePluginEntry[];
 }
 
+export interface NormalizedMarketplaceSource {
+  input: string;
+  kind: 'file' | 'git';
+  resolvedSource: string;
+  cacheKey: string;
+  filePath?: string;
+}
+
+export interface MarketplaceSyncResult {
+  record: MarketplaceRecord;
+  manifest: MarketplaceManifest;
+  localPath: string;
+}
+
 export interface AgentPluginManifest {
   name: string;
   description?: string;
@@ -111,6 +125,45 @@ export interface AipmSettings {
   version: number;
   marketplaces: MarketplaceRecord[];
   plugins: InstalledPluginRecord[];
+}
+
+export interface PluginListing {
+  marketplace: string;
+  name: string;
+  version: string;
+  description: string;
+  notes?: string;
+  manifestVersion?: string;
+  marketplaceVersion?: string;
+}
+
+export interface InstallPlanOperation {
+  type: 'agent' | 'skill' | 'hooks' | 'mcp' | 'manifest';
+  sourcePath: string;
+  destinationPath: string;
+  relativeDestinationPath: string;
+}
+
+export interface InstallPlanConflict {
+  destinationPath: string;
+  relativeDestinationPath: string;
+  reason: 'existing-unmanaged' | 'managed-by-other-plugin' | 'overwrite-managed';
+  ownerPlugin?: string;
+  requiresPrompt: boolean;
+}
+
+export interface InstallPlan {
+  pluginName: string;
+  target: InstallTarget;
+  operations: InstallPlanOperation[];
+  conflicts: InstallPlanConflict[];
+  requiresConfirmation: boolean;
+}
+
+export interface InstallPlanOptions {
+  target: InstallTarget;
+  force?: boolean;
+  installedPlugins?: InstalledPluginRecord[];
 }
 
 export interface TemplateFile {

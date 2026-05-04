@@ -2,7 +2,14 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, rm, mkdir, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { formatTemplateTable, listTemplateManifests } from '../src/listing.js';
+import {
+  formatMarketplacePluginTable,
+  formatTemplateTable,
+  listMarketplacePlugins,
+  listTemplateManifests,
+} from '../src/listing.js';
+
+const marketplaceFixtureRoot = join(process.cwd(), 'tests', 'fixtures', 'marketplaces', 'bluelily');
 
 let workDir: string;
 
@@ -56,5 +63,54 @@ describe('formatTemplateTable', () => {
     expect(lines[1]).toBe(separator);
     expect(lines[2]).toBe(row1);
     expect(lines[3]).toBe(row2);
+  });
+});
+
+describe('listMarketplacePlugins', () => {
+  it('returns manifest versions and mismatch notes from the marketplace fixture', async () => {
+    const listings = await listMarketplacePlugins(marketplaceFixtureRoot);
+
+    expect(listings).toEqual([
+      {
+        marketplace: 'bluelilyc-tools',
+        name: 'core',
+        version: '0.6.0',
+        description:
+          'Core workflow, review-evidence, transcript-hook, and shared repository-guidance plugin',
+        notes: 'Marketplace plugin version "0.5.0" does not match manifest version "0.6.0"',
+        manifestVersion: '0.6.0',
+        marketplaceVersion: '0.5.0',
+      },
+      {
+        marketplace: 'bluelilyc-tools',
+        name: 'product-management',
+        version: '0.3.0',
+        description:
+          'Product-management planning plugin for Feature, Story, Task, and process-improvement work',
+        notes: 'Marketplace plugin version "0.2.0" does not match manifest version "0.3.0"',
+        manifestVersion: '0.3.0',
+        marketplaceVersion: '0.2.0',
+      },
+    ]);
+  });
+});
+
+describe('formatMarketplacePluginTable', () => {
+  it('formats a plugin listing table with notes', () => {
+    const output = formatMarketplacePluginTable([
+      {
+        marketplace: 'bluelilyc-tools',
+        name: 'core',
+        version: '0.6.0',
+        description: 'Core plugin',
+        notes: 'Version mismatch',
+      },
+    ]);
+
+    const lines = output.split('\n');
+    expect(lines[0]).toContain('Plugin');
+    expect(lines[0]).toContain('Description');
+    expect(lines[0]).toContain('Notes');
+    expect(lines[2]).toContain('Version mismatch');
   });
 });

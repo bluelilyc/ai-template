@@ -17,6 +17,7 @@ export default defineConfig({
         'commander',
         'fs',
         'fs/promises',
+        'os',
         'path',
         'process',
         'readline/promises',

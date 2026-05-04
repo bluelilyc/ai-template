@@ -1,6 +1,7 @@
 import { execFile } from 'child_process';
 import { promises as fs } from 'fs';
-import { basename, join, relative, resolve } from 'path';
+import { tmpdir } from 'os';
+import { basename, dirname, join, relative, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { promisify } from 'util';
 import type {
@@ -133,6 +134,57 @@ async function runGitCommand(args: string[], cwd?: string): Promise<void> {
   await execFileAsync('git', args, cwd ? { cwd } : undefined);
 }
 
+function getMaterializedPluginRootRelativePath(sourceRoot: string, pluginRoot: string): string {
+  const relativePluginRoot = relative(sourceRoot, pluginRoot);
+
+  if (relativePluginRoot.startsWith('..')) {
+    throw new Error('Marketplace pluginRoot must resolve within the marketplace source');
+  }
+
+  return relativePluginRoot;
+}
+
+async function materializeMarketplaceCache(sourceRoot: string, cachePath: string): Promise<void> {
+  const manifest = await readMarketplaceManifest(sourceRoot);
+  const manifestSourcePath = getMarketplaceManifestPath(sourceRoot);
+  const manifestDestinationPath = getMarketplaceManifestPath(cachePath);
+  const pluginRoot = resolve(sourceRoot, manifest.metadata.pluginRoot);
+  const pluginRootRelativePath = getMaterializedPluginRootRelativePath(sourceRoot, pluginRoot);
+  const pluginRootDestination = join(cachePath, pluginRootRelativePath);
+
+  await fs.rm(cachePath, { recursive: true, force: true });
+  await fs.mkdir(dirname(manifestDestinationPath), { recursive: true });
+  await fs.copyFile(manifestSourcePath, manifestDestinationPath);
+  await fs.cp(pluginRoot, pluginRootDestination, { recursive: true, force: true });
+}
+
+async function syncFileMarketplaceSource(
+  normalizedSource: NormalizedMarketplaceSource,
+  cachePath: string
+): Promise<string> {
+  if (!normalizedSource.filePath) {
+    throw new Error(`Marketplace file source is missing a file path: ${normalizedSource.input}`);
+  }
+
+  await materializeMarketplaceCache(normalizedSource.filePath, cachePath);
+  return cachePath;
+}
+
+async function syncGitMarketplaceSource(
+  normalizedSource: NormalizedMarketplaceSource,
+  cachePath: string
+): Promise<string> {
+  const stagingRoot = await fs.mkdtemp(join(tmpdir(), 'aipm-marketplace-'));
+
+  try {
+    await runGitCommand(['clone', '--depth', '1', normalizedSource.resolvedSource, stagingRoot]);
+    await materializeMarketplaceCache(stagingRoot, cachePath);
+    return cachePath;
+  } finally {
+    await fs.rm(stagingRoot, { recursive: true, force: true });
+  }
+}
+
 /**
  * Resolve the cache root used for synced marketplace repositories.
  */
@@ -203,22 +255,10 @@ export async function syncMarketplaceSource(
   await fs.mkdir(cacheRoot, { recursive: true });
 
   if (normalizedSource.kind === 'file') {
-    if (!normalizedSource.filePath) {
-      throw new Error(`Marketplace file source is missing a file path: ${normalizedSource.input}`);
-    }
-
-    await fs.rm(localPath, { recursive: true, force: true });
-    await fs.cp(normalizedSource.filePath, localPath, { recursive: true, force: true });
-    return localPath;
+    return syncFileMarketplaceSource(normalizedSource, localPath);
   }
 
-  if (await pathExists(localPath)) {
-    await runGitCommand(['pull', '--ff-only'], localPath);
-    return localPath;
-  }
-
-  await runGitCommand(['clone', normalizedSource.resolvedSource, localPath]);
-  return localPath;
+  return syncGitMarketplaceSource(normalizedSource, localPath);
 }
 
 /**

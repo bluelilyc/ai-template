@@ -1,12 +1,14 @@
+import { promises as fs } from 'fs';
 import { resolve } from 'path';
 import {
   compareMarketplaceEntryToPluginManifest,
   readMarketplaceManifest,
   readPluginManifest,
   resolveMarketplacePluginRoot,
+  syncRegisteredMarketplace,
 } from './marketplaces.js';
 import { readAipmSettings } from './settings.js';
-import type { InstallTarget, PluginListing } from './types.js';
+import type { InstallTarget, MarketplaceRecord, PluginListing } from './types.js';
 
 export interface InstalledPluginListing {
   name: string;
@@ -21,6 +23,34 @@ export interface MarketplaceRegistryListing {
   source: string;
   localPath: string;
   lastSyncedAt: string;
+}
+
+function isCacheMiss(error: unknown): boolean {
+  return error instanceof Error && 'code' in error && (error as NodeJS.ErrnoException).code === 'ENOENT';
+}
+
+async function listMarketplaceRecordPlugins(
+  workspaceRoot: string,
+  marketplaceRecord: MarketplaceRecord
+): Promise<PluginListing[]> {
+  if (!marketplaceRecord.localPath) {
+    const syncResult = await syncRegisteredMarketplace(workspaceRoot, marketplaceRecord.name);
+    return listMarketplacePlugins(syncResult.localPath);
+  }
+
+  const localPath = resolve(workspaceRoot, marketplaceRecord.localPath);
+
+  try {
+    await fs.access(localPath);
+    return await listMarketplacePlugins(localPath);
+  } catch (error) {
+    if (!isCacheMiss(error)) {
+      throw error;
+    }
+
+    const syncResult = await syncRegisteredMarketplace(workspaceRoot, marketplaceRecord.name);
+    return listMarketplacePlugins(syncResult.localPath);
+  }
 }
 
 /**
@@ -58,13 +88,9 @@ export async function listConfiguredMarketplacePlugins(workspaceRoot: string): P
   const settings = await readAipmSettings(workspaceRoot);
 
   const listings = await Promise.all(
-    settings.marketplaces.map(async (marketplaceRecord) => {
-      if (!marketplaceRecord.localPath) {
-        return [];
-      }
-
-      return listMarketplacePlugins(resolve(workspaceRoot, marketplaceRecord.localPath));
-    })
+    settings.marketplaces.map((marketplaceRecord) =>
+      listMarketplaceRecordPlugins(workspaceRoot, marketplaceRecord)
+    )
   );
 
   return listings.flat().sort((left, right) => left.name.localeCompare(right.name));

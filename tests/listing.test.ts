@@ -1,14 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtemp, rm } from 'fs/promises';
+import { access, mkdtemp, rm } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import {
   formatMarketplacePluginTable,
   formatMarketplaceRegistryTable,
+  listConfiguredMarketplacePlugins,
   listMarketplacePlugins,
   listRegisteredMarketplaces,
 } from '../src/listing.js';
-import { registerMarketplace } from '../src/marketplaces.js';
+import { getMarketplaceCacheRoot, registerMarketplace } from '../src/marketplaces.js';
 import { pathToFileURL } from 'url';
 
 const marketplaceFixtureRoot = join(process.cwd(), 'tests', 'fixtures', 'marketplaces', 'bluelily');
@@ -22,6 +23,15 @@ beforeEach(async () => {
 afterEach(async () => {
   await rm(workDir, { recursive: true, force: true });
 });
+
+async function exists(filePath: string): Promise<boolean> {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 describe('listMarketplacePlugins', () => {
   it('returns manifest versions and mismatch notes from the marketplace fixture', async () => {
@@ -61,6 +71,16 @@ describe('listRegisteredMarketplaces', () => {
     expect(listings).toHaveLength(1);
     expect(listings[0].name).toBe('bluelilyc-tools');
     expect(listings[0].localPath).toBe('.aipm/cache/marketplaces/bluelily');
+  });
+
+  it('resyncs configured marketplaces when the cache is missing', async () => {
+    await registerMarketplace(workDir, pathToFileURL(marketplaceFixtureRoot).toString());
+    await rm(getMarketplaceCacheRoot(workDir), { recursive: true, force: true });
+
+    const listings = await listConfiguredMarketplacePlugins(workDir);
+
+    expect(listings.map((listing) => listing.name)).toEqual(['core', 'product-management']);
+    expect(await exists(join(getMarketplaceCacheRoot(workDir), 'bluelily'))).toBe(true);
   });
 });
 

@@ -5,11 +5,53 @@ export {
   readTemplateManifest,
 } from './installer.js';
 export { formatTemplateTable, listTemplateManifests } from './listing.js';
+export {
+  AIPM_DIRECTORY_NAME,
+  AIPM_SETTINGS_FILE_NAME,
+  AIPM_SETTINGS_VERSION,
+  createDefaultAipmSettings,
+  getAipmDirectory,
+  getAipmSettingsPath,
+  isAipmSettings,
+  parseAipmSettings,
+  readAipmSettings,
+  writeAipmSettings,
+} from './settings.js';
+export {
+  MARKETPLACE_MANIFEST_RELATIVE_PATH,
+  RECOGNIZED_PLUGIN_MANIFEST_PATHS,
+  compareMarketplaceEntryToPluginManifest,
+  findPluginManifestPath,
+  getMarketplaceManifestPath,
+  getRecognizedPluginManifestPaths,
+  isMarketplaceManifest,
+  isPluginManifest,
+  normalizePluginManifest,
+  parseMarketplaceManifest,
+  parsePluginManifest,
+  readMarketplaceManifest,
+  readPluginManifest,
+  resolveMarketplacePluginRoot,
+} from './marketplaces.js';
 export type {
+  AgentPluginManifest,
+  AipmSettings,
   InstallOptions,
+  InstalledPluginManifestSnapshot,
+  InstalledPluginRecord,
+  InstallTarget,
+  MarketplaceManifest,
+  MarketplaceMetadata,
+  MarketplacePluginEntry,
+  MarketplaceRecord,
   TemplateFile,
   McpConfig,
   McpServerConfig,
+  NormalizedPluginManifest,
+  PluginAuthor,
+  PluginDependency,
+  PluginManifestComparison,
+  PluginManifestLoadResult,
   TemplateManifest,
 } from './types.js';
 export type { TemplateListing } from './listing.js';

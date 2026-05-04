@@ -1,0 +1,46 @@
+{
+  "name": "bluelilyc-tools",
+  "owner": {
+    "name": "Blue Lily Marketplace"
+  },
+  "metadata": {
+    "description": "Reusable AI Code plugins for Blue Lily repositories",
+    "version": "0.1.0",
+    "pluginRoot": "./marketplace/copilot/plugins"
+  },
+  "plugins": [
+    {
+      "name": "core",
+      "source": "core",
+      "description": "Core workflow, review-evidence, transcript-hook, and shared repository-guidance plugin",
+      "version": "0.5.0",
+      "author": {
+        "name": "Blue Lily EPMO"
+      },
+      "category": "governance",
+      "tags": [
+        "workflow",
+        "planning",
+        "implementation",
+        "blue-lily"
+      ],
+      "strict": true
+    },
+    {
+      "name": "product-management",
+      "source": "product-management",
+      "description": "Product-management planning plugin for Feature, Story, Task, and process-improvement work",
+      "version": "0.2.0",
+      "author": {
+        "name": "Blue Lily EPMO"
+      },
+      "category": "governance",
+      "tags": [
+        "product-management",
+        "planning",
+        "blue-lily"
+      ],
+      "strict": true
+    }
+  ]
+}

@@ -1,0 +1,386 @@
+import { promises as fs } from 'fs';
+import { join, resolve } from 'path';
+import type {
+  AgentPluginManifest,
+  MarketplaceManifest,
+  MarketplacePluginEntry,
+  NormalizedPluginManifest,
+  PluginAuthor,
+  PluginDependency,
+  PluginManifestComparison,
+  PluginManifestLoadResult,
+} from './types.js';
+
+export const MARKETPLACE_MANIFEST_RELATIVE_PATH = join('.github', 'plugin', 'marketplace.json');
+export const RECOGNIZED_PLUGIN_MANIFEST_PATHS = [
+  join('.plugin', 'plugin.json'),
+  'plugin.json',
+  join('.github', 'plugin', 'plugin.json'),
+  join('.claude-plugin', 'plugin.json'),
+] as const;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((entry) => typeof entry === 'string');
+}
+
+function isPluginAuthor(value: unknown): value is PluginAuthor {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  if (typeof value.name !== 'string') {
+    return false;
+  }
+
+  if (value.email !== undefined && typeof value.email !== 'string') {
+    return false;
+  }
+
+  if (value.url !== undefined && typeof value.url !== 'string') {
+    return false;
+  }
+
+  return true;
+}
+
+function isPluginDependency(value: unknown): value is PluginDependency {
+  if (!isRecord(value) || typeof value.name !== 'string') {
+    return false;
+  }
+
+  if (value.version !== undefined && typeof value.version !== 'string') {
+    return false;
+  }
+
+  return true;
+}
+
+function isPluginEntry(value: unknown): value is MarketplacePluginEntry {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  if (typeof value.name !== 'string' || typeof value.source !== 'string') {
+    return false;
+  }
+
+  if (value.description !== undefined && typeof value.description !== 'string') {
+    return false;
+  }
+
+  if (value.version !== undefined && typeof value.version !== 'string') {
+    return false;
+  }
+
+  if (value.author !== undefined && !isPluginAuthor(value.author)) {
+    return false;
+  }
+
+  if (value.category !== undefined && typeof value.category !== 'string') {
+    return false;
+  }
+
+  if (value.tags !== undefined && !isStringArray(value.tags)) {
+    return false;
+  }
+
+  if (value.strict !== undefined && typeof value.strict !== 'boolean') {
+    return false;
+  }
+
+  return true;
+}
+
+function isPluginName(value: string): boolean {
+  return /^[a-z0-9-]{1,64}$/.test(value);
+}
+
+function normalizePathList(value?: string | string[]): string[] {
+  if (value === undefined) {
+    return [];
+  }
+
+  return Array.isArray(value) ? value : [value];
+}
+
+/**
+ * Read the marketplace manifest path from a cloned repository root.
+ */
+export function getMarketplaceManifestPath(repoRoot: string): string {
+  return join(repoRoot, MARKETPLACE_MANIFEST_RELATIVE_PATH);
+}
+
+/**
+ * Validate an unknown JSON value as a marketplace manifest.
+ */
+export function isMarketplaceManifest(value: unknown): value is MarketplaceManifest {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  if (typeof value.name !== 'string' || !isPluginName(value.name)) {
+    return false;
+  }
+
+  if (!isPluginAuthor(value.owner)) {
+    return false;
+  }
+
+  if (!isRecord(value.metadata)) {
+    return false;
+  }
+
+  if (
+    typeof value.metadata.description !== 'string' ||
+    typeof value.metadata.version !== 'string' ||
+    typeof value.metadata.pluginRoot !== 'string'
+  ) {
+    return false;
+  }
+
+  if (!Array.isArray(value.plugins) || !value.plugins.every(isPluginEntry)) {
+    return false;
+  }
+
+  const names = new Set<string>();
+  for (const plugin of value.plugins) {
+    if (names.has(plugin.name)) {
+      return false;
+    }
+    names.add(plugin.name);
+  }
+
+  return true;
+}
+
+/**
+ * Parse an unknown JSON value into a validated marketplace manifest.
+ */
+export function parseMarketplaceManifest(value: unknown): MarketplaceManifest {
+  if (!isMarketplaceManifest(value)) {
+    throw new Error('Invalid marketplace manifest');
+  }
+
+  return value;
+}
+
+/**
+ * Read a marketplace manifest from a cloned marketplace repository.
+ */
+export async function readMarketplaceManifest(repoRoot: string): Promise<MarketplaceManifest> {
+  const manifestPath = getMarketplaceManifestPath(repoRoot);
+
+  try {
+    const content = await fs.readFile(manifestPath, 'utf-8');
+    return parseMarketplaceManifest(JSON.parse(content) as unknown);
+  } catch (error: unknown) {
+    if (error instanceof SyntaxError) {
+      throw new Error(`Invalid JSON in ${manifestPath}`);
+    }
+
+    throw error;
+  }
+}
+
+/**
+ * Resolve a plugin root using the marketplace pluginRoot and entry source fields.
+ */
+export function resolveMarketplacePluginRoot(
+  repoRoot: string,
+  marketplace: MarketplaceManifest,
+  plugin: MarketplacePluginEntry
+): string {
+  return resolve(repoRoot, marketplace.metadata.pluginRoot, plugin.source);
+}
+
+/**
+ * Return the recognized plugin manifest candidate paths for a plugin root.
+ */
+export function getRecognizedPluginManifestPaths(pluginRoot: string): string[] {
+  return RECOGNIZED_PLUGIN_MANIFEST_PATHS.map((relativePath) => join(pluginRoot, relativePath));
+}
+
+/**
+ * Find the first recognized plugin manifest path that exists on disk.
+ */
+export async function findPluginManifestPath(pluginRoot: string): Promise<string | null> {
+  for (const candidatePath of getRecognizedPluginManifestPaths(pluginRoot)) {
+    try {
+      await fs.access(candidatePath);
+      return candidatePath;
+    } catch {
+      // Continue to the next recognized manifest location.
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Validate an unknown JSON value as a VS Code-compatible plugin manifest.
+ */
+export function isPluginManifest(value: unknown): value is AgentPluginManifest {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  if (typeof value.name !== 'string' || !isPluginName(value.name)) {
+    return false;
+  }
+
+  if (value.description !== undefined && typeof value.description !== 'string') {
+    return false;
+  }
+
+  if (value.version !== undefined && typeof value.version !== 'string') {
+    return false;
+  }
+
+  if (value.author !== undefined && !isPluginAuthor(value.author)) {
+    return false;
+  }
+
+  if (
+    value.skills !== undefined &&
+    typeof value.skills !== 'string' &&
+    !isStringArray(value.skills)
+  ) {
+    return false;
+  }
+
+  if (
+    value.agents !== undefined &&
+    typeof value.agents !== 'string' &&
+    !isStringArray(value.agents)
+  ) {
+    return false;
+  }
+
+  if (
+    value.hooks !== undefined &&
+    typeof value.hooks !== 'string' &&
+    !isRecord(value.hooks)
+  ) {
+    return false;
+  }
+
+  if (
+    value.mcpServers !== undefined &&
+    typeof value.mcpServers !== 'string' &&
+    !isRecord(value.mcpServers)
+  ) {
+    return false;
+  }
+
+  if (
+    value.dependencies !== undefined &&
+    (!Array.isArray(value.dependencies) || !value.dependencies.every(isPluginDependency))
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Parse an unknown JSON value into a validated plugin manifest.
+ */
+export function parsePluginManifest(value: unknown): AgentPluginManifest {
+  if (!isPluginManifest(value)) {
+    throw new Error('Invalid plugin manifest');
+  }
+
+  return value;
+}
+
+/**
+ * Normalize plugin manifest path fields into a stable internal shape.
+ */
+export function normalizePluginManifest(
+  manifest: AgentPluginManifest
+): NormalizedPluginManifest {
+  const normalizedManifest: NormalizedPluginManifest = {
+    name: manifest.name,
+    description: manifest.description,
+    version: manifest.version,
+    author: manifest.author,
+    skills: normalizePathList(manifest.skills),
+    agents: normalizePathList(manifest.agents),
+    dependencies: manifest.dependencies ?? [],
+  };
+
+  if (typeof manifest.hooks === 'string') {
+    normalizedManifest.hooksPath = manifest.hooks;
+  } else if (manifest.hooks) {
+    normalizedManifest.hooksInline = manifest.hooks;
+  }
+
+  if (typeof manifest.mcpServers === 'string') {
+    normalizedManifest.mcpServersPath = manifest.mcpServers;
+  } else if (manifest.mcpServers) {
+    normalizedManifest.mcpServersInline = manifest.mcpServers;
+  }
+
+  return normalizedManifest;
+}
+
+/**
+ * Read and normalize the first recognized plugin manifest beneath a plugin root.
+ */
+export async function readPluginManifest(pluginRoot: string): Promise<PluginManifestLoadResult> {
+  const manifestPath = await findPluginManifestPath(pluginRoot);
+
+  if (!manifestPath) {
+    throw new Error(`No plugin manifest found in ${pluginRoot}`);
+  }
+
+  try {
+    const content = await fs.readFile(manifestPath, 'utf-8');
+    const manifest = parsePluginManifest(JSON.parse(content) as unknown);
+    return {
+      manifestPath,
+      manifest,
+      normalizedManifest: normalizePluginManifest(manifest),
+    };
+  } catch (error: unknown) {
+    if (error instanceof SyntaxError) {
+      throw new Error(`Invalid JSON in ${manifestPath}`);
+    }
+
+    throw error;
+  }
+}
+
+/**
+ * Compare marketplace entry metadata to plugin manifest identity fields.
+ */
+export function compareMarketplaceEntryToPluginManifest(
+  plugin: MarketplacePluginEntry,
+  manifest: AgentPluginManifest
+): PluginManifestComparison {
+  const issues: string[] = [];
+  const nameMatches = plugin.name === manifest.name;
+  const versionMatches = plugin.version === undefined || plugin.version === manifest.version;
+
+  if (!nameMatches) {
+    issues.push(
+      `Marketplace plugin name "${plugin.name}" does not match manifest name "${manifest.name}"`
+    );
+  }
+
+  if (!versionMatches) {
+    issues.push(
+      `Marketplace plugin version "${plugin.version}" does not match manifest version "${manifest.version}"`
+    );
+  }
+
+  return {
+    nameMatches,
+    versionMatches,
+    issues,
+  };
+}

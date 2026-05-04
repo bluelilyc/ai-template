@@ -39,7 +39,7 @@ describe('installMarketplacePlugin', () => {
     expect(await readFile(join(workDir, '.github', 'agents', 'core.agent.md'), 'utf-8')).toContain(
       '# core'
     );
-    expect(result.record.installedFiles).toContain('.github/hooks.json');
+    expect(result.record.installedFiles).toContain('.github/hooks/core.json');
     expect(settings.plugins).toHaveLength(1);
     expect(settings.plugins[0].name).toBe('core');
   });
@@ -173,7 +173,7 @@ describe('removeMarketplacePlugin', () => {
         target: 'copilot',
         removedFiles: expect.arrayContaining([
           '.github/agents/core.agent.md',
-          '.github/hooks.json',
+          '.github/hooks/core.json',
         ]),
       },
     ]);

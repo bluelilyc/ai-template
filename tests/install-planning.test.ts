@@ -28,7 +28,7 @@ describe('createInstallPlan', () => {
     expect(plan.pluginName).toBe('core');
     expect(plan.operations.map((operation) => operation.relativeDestinationPath).sort()).toEqual([
       '.github/agents/core.agent.md',
-      '.github/hooks.json',
+      '.github/hooks/core.json',
       '.github/skills/review-evidence/SKILL.md',
     ]);
     expect(plan.requiresConfirmation).toBe(false);

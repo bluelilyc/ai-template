@@ -119,7 +119,7 @@ export async function createInstallPlan(
       sourcePath,
       destinationPath:
         options.target === 'copilot'
-          ? join(targetRoot, 'hooks.json')
+          ? join(targetRoot, 'hooks', `${pluginManifest.manifest.name}.json`)
           : join(targetRoot, pluginManifest.normalizedManifest.hooksPath),
       relativeDestinationPath: '',
     });

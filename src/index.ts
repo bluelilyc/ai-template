@@ -7,11 +7,19 @@ export {
 export { formatTemplateTable, listTemplateManifests } from './listing.js';
 export {
   formatMarketplacePluginTable,
+  formatMarketplaceRegistryTable,
   listConfiguredMarketplacePlugins,
   listInstalledPlugins,
+  listRegisteredMarketplaces,
   listMarketplacePlugins,
 } from './listing.js';
 export { createInstallPlan } from './install-planning.js';
+export {
+  confirmInstallPlan,
+  installMarketplacePlugin,
+  resolveMarketplacePlugin,
+  updateMarketplacePlugins,
+} from './plugins.js';
 export {
   AIPM_DIRECTORY_NAME,
   AIPM_SETTINGS_FILE_NAME,
@@ -42,6 +50,8 @@ export {
   readMarketplaceManifest,
   readPluginManifest,
   resolveMarketplacePluginRoot,
+  syncRegisteredMarketplace,
+  syncRegisteredMarketplaces,
   syncMarketplaceSource,
 } from './marketplaces.js';
 export type {
@@ -72,4 +82,8 @@ export type {
   PluginManifestLoadResult,
   TemplateManifest,
 } from './types.js';
-export type { InstalledPluginListing, TemplateListing } from './listing.js';
+export type {
+  InstalledPluginListing,
+  MarketplaceRegistryListing,
+  TemplateListing,
+} from './listing.js';

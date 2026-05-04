@@ -23,6 +23,13 @@ export interface InstalledPluginListing {
   target: InstallTarget;
 }
 
+export interface MarketplaceRegistryListing {
+  name: string;
+  source: string;
+  localPath: string;
+  lastSyncedAt: string;
+}
+
 export async function listTemplateManifests(templatesRoot: string): Promise<TemplateListing[]> {
   const entries = await fs.readdir(templatesRoot, { withFileTypes: true });
   const dirs = entries.filter((entry) => entry.isDirectory());
@@ -164,4 +171,63 @@ export async function listInstalledPlugins(workspaceRoot: string): Promise<Insta
       target: plugin.target,
     }))
     .sort((left, right) => left.name.localeCompare(right.name));
+}
+
+/**
+ * List registered marketplaces from `.aipm/settings.json`.
+ */
+export async function listRegisteredMarketplaces(
+  workspaceRoot: string
+): Promise<MarketplaceRegistryListing[]> {
+  const settings = await readAipmSettings(workspaceRoot);
+
+  return settings.marketplaces
+    .map((marketplace) => ({
+      name: marketplace.name,
+      source: marketplace.source,
+      localPath: marketplace.localPath ?? '',
+      lastSyncedAt: marketplace.lastSyncedAt ?? '',
+    }))
+    .sort((left, right) => left.name.localeCompare(right.name));
+}
+
+/**
+ * Format a registered marketplace table.
+ */
+export function formatMarketplaceRegistryTable(listings: MarketplaceRegistryListing[]): string {
+  const nameHeader = 'Marketplace';
+  const sourceHeader = 'Source';
+  const pathHeader = 'Local Path';
+  const syncedHeader = 'Last Synced';
+
+  const nameWidth = Math.max(nameHeader.length, ...listings.map((item) => item.name.length));
+  const sourceWidth = Math.max(sourceHeader.length, ...listings.map((item) => item.source.length));
+  const pathWidth = Math.max(pathHeader.length, ...listings.map((item) => item.localPath.length));
+  const syncedWidth = Math.max(
+    syncedHeader.length,
+    ...listings.map((item) => item.lastSyncedAt.length)
+  );
+
+  const header = [
+    nameHeader.padEnd(nameWidth),
+    sourceHeader.padEnd(sourceWidth),
+    pathHeader.padEnd(pathWidth),
+    syncedHeader.padEnd(syncedWidth),
+  ].join('  ');
+  const separator = [
+    '-'.repeat(nameWidth),
+    '-'.repeat(sourceWidth),
+    '-'.repeat(pathWidth),
+    '-'.repeat(syncedWidth),
+  ].join('  ');
+  const rows = listings.map((item) =>
+    [
+      item.name.padEnd(nameWidth),
+      item.source.padEnd(sourceWidth),
+      item.localPath.padEnd(pathWidth),
+      item.lastSyncedAt.padEnd(syncedWidth),
+    ].join('  ')
+  );
+
+  return [header, separator, ...rows].join('\n');
 }

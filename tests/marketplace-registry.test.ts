@@ -7,6 +7,7 @@ import {
   getMarketplaceCacheRoot,
   normalizeMarketplaceSource,
   registerMarketplace,
+  syncRegisteredMarketplace,
 } from '../src/marketplaces.js';
 import { readAipmSettings } from '../src/settings.js';
 
@@ -53,5 +54,15 @@ describe('registerMarketplace', () => {
     expect(result.localPath).toBe(join(getMarketplaceCacheRoot(workDir), 'bluelily'));
     expect(settings.marketplaces).toHaveLength(1);
     expect(settings.marketplaces[0].name).toBe('bluelilyc-tools');
+  });
+
+  it('syncs a registered marketplace by name', async () => {
+    const source = pathToFileURL(fixtureRoot).toString();
+    await registerMarketplace(workDir, source);
+
+    const result = await syncRegisteredMarketplace(workDir, 'bluelilyc-tools');
+
+    expect(result.record.name).toBe('bluelilyc-tools');
+    expect(result.record.localPath).toBe('.aipm/cache/marketplaces/bluelily');
   });
 });

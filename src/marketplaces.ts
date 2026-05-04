@@ -237,7 +237,7 @@ export async function registerMarketplace(
     name: manifest.name,
     source,
     resolvedSource: normalizedSource.resolvedSource,
-    localPath: relative(workspaceRoot, localPath),
+    localPath: relative(workspaceRoot, localPath).replace(/\\/g, '/'),
     lastSyncedAt: new Date().toISOString(),
   };
 
@@ -253,6 +253,60 @@ export async function registerMarketplace(
     manifest,
     localPath,
   };
+}
+
+/**
+ * Sync one registered marketplace by name and persist the refreshed cache path and timestamp.
+ */
+export async function syncRegisteredMarketplace(
+  workspaceRoot: string,
+  marketplaceName: string
+): Promise<MarketplaceSyncResult> {
+  const settings = await readAipmSettings(workspaceRoot);
+  const record = settings.marketplaces.find((entry) => entry.name === marketplaceName);
+
+  if (!record) {
+    throw new Error(`Marketplace not found: ${marketplaceName}`);
+  }
+
+  const normalizedSource = normalizeMarketplaceSource(record.source);
+  const localPath = await syncMarketplaceSource(workspaceRoot, normalizedSource);
+  const manifest = await readMarketplaceManifest(localPath);
+  const updatedRecord: MarketplaceRecord = {
+    ...record,
+    name: manifest.name,
+    resolvedSource: normalizedSource.resolvedSource,
+    localPath: relative(workspaceRoot, localPath).replace(/\\/g, '/'),
+    lastSyncedAt: new Date().toISOString(),
+  };
+
+  settings.marketplaces = settings.marketplaces
+    .map((entry) => (entry.name === marketplaceName ? updatedRecord : entry))
+    .sort((left, right) => left.name.localeCompare(right.name));
+
+  await writeAipmSettings(workspaceRoot, settings);
+
+  return {
+    record: updatedRecord,
+    manifest,
+    localPath,
+  };
+}
+
+/**
+ * Sync all registered marketplaces and persist their refreshed metadata.
+ */
+export async function syncRegisteredMarketplaces(
+  workspaceRoot: string
+): Promise<MarketplaceSyncResult[]> {
+  const settings = await readAipmSettings(workspaceRoot);
+  const results: MarketplaceSyncResult[] = [];
+
+  for (const record of settings.marketplaces) {
+    results.push(await syncRegisteredMarketplace(workspaceRoot, record.name));
+  }
+
+  return results;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, afterEach } from 'vitest';
-import { cp, mkdtemp, rm, writeFile, access } from 'fs/promises';
+import { cp, mkdtemp, readFile, rm, writeFile, access } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join, resolve } from 'path';
 import { pathToFileURL } from 'url';
@@ -62,11 +62,13 @@ describe('registerMarketplace', () => {
 
     const result = await registerMarketplace(workDir, source);
     const settings = await readAipmSettings(workDir);
+    const gitignore = await readFile(join(workDir, '.gitignore'), 'utf-8');
 
     expect(result.manifest.name).toBe('bluelilyc-tools');
     expect(result.localPath).toBe(join(getMarketplaceCacheRoot(workDir), 'bluelily'));
     expect(settings.marketplaces).toHaveLength(1);
     expect(settings.marketplaces[0].name).toBe('bluelilyc-tools');
+    expect(gitignore).toContain('.aipm/cache/');
   });
 
   it('stores only the marketplace manifest and plugin subtree for file sources', async () => {
@@ -129,5 +131,23 @@ describe('registerMarketplace', () => {
     );
     expect(await exists(join(localPath, '.git'))).toBe(false);
     expect(await exists(join(localPath, 'README.md'))).toBe(false);
+  });
+
+  it('does not duplicate an existing cache ignore rule', async () => {
+    await writeFile(join(workDir, '.gitignore'), '.aipm/cache/\nnode_modules/\n', 'utf-8');
+
+    await registerMarketplace(workDir, pathToFileURL(fixtureRoot).toString());
+
+    const gitignore = await readFile(join(workDir, '.gitignore'), 'utf-8');
+    expect(gitignore.match(/^\.aipm\/cache\/$/gm)).toHaveLength(1);
+  });
+
+  it('does not add a cache entry when .aipm is already ignored', async () => {
+    await writeFile(join(workDir, '.gitignore'), '.aipm/\n', 'utf-8');
+
+    await registerMarketplace(workDir, pathToFileURL(fixtureRoot).toString());
+
+    const gitignore = await readFile(join(workDir, '.gitignore'), 'utf-8');
+    expect(gitignore.trim()).toBe('.aipm/');
   });
 });

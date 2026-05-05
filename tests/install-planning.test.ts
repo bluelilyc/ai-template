@@ -29,6 +29,7 @@ describe('createInstallPlan', () => {
     expect(plan.operations.map((operation) => operation.relativeDestinationPath).sort()).toEqual([
       '.github/agents/core.agent.md',
       '.github/hooks/core.json',
+      '.github/scripts/install.ps1',
       '.github/skills/review-evidence/SKILL.md',
     ]);
     expect(plan.requiresConfirmation).toBe(false);
@@ -45,6 +46,7 @@ describe('createInstallPlan', () => {
       '.claude/core/.claude-plugin/plugin.json',
       '.claude/core/agents/core.agent.md',
       '.claude/core/hooks/hooks.json',
+      '.claude/core/scripts/install.ps1',
       '.claude/core/skills/review-evidence/SKILL.md',
     ]);
   });

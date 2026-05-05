@@ -56,6 +56,7 @@ export interface AgentPluginManifest {
   author?: PluginAuthor;
   skills?: string | string[];
   agents?: string | string[];
+  scripts?: string | string[];
   hooks?: string | Record<string, unknown>;
   mcpServers?: string | Record<string, unknown>;
   dependencies?: PluginDependency[];
@@ -68,6 +69,7 @@ export interface NormalizedPluginManifest {
   author?: PluginAuthor;
   skills: string[];
   agents: string[];
+  scripts: string[];
   hooksPath?: string;
   hooksInline?: Record<string, unknown>;
   mcpServersPath?: string;

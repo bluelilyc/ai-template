@@ -7,6 +7,7 @@
   },
   "agents": "./agents/",
   "skills": "./skills/",
+  "scripts": "./scripts/",
   "hooks": "./hooks/hooks.json",
   "dependencies": [
     {

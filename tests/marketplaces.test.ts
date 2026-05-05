@@ -45,6 +45,7 @@ describe('readPluginManifest', () => {
     expect(result.manifest.name).toBe('core');
     expect(result.normalizedManifest.agents).toEqual(['./agents/']);
     expect(result.normalizedManifest.skills).toEqual(['./skills/']);
+    expect(result.normalizedManifest.scripts).toEqual(['./scripts/']);
     expect(result.normalizedManifest.hooksPath).toBe('./hooks/hooks.json');
   });
 
@@ -53,11 +54,13 @@ describe('readPluginManifest', () => {
       name: 'test-plugin',
       agents: ['./agents/', './more-agents/'],
       skills: './skills/',
+      scripts: './scripts/',
       mcpServers: { mcpServers: {} },
     });
 
     expect(normalizedManifest.agents).toEqual(['./agents/', './more-agents/']);
     expect(normalizedManifest.skills).toEqual(['./skills/']);
+    expect(normalizedManifest.scripts).toEqual(['./scripts/']);
     expect(normalizedManifest.mcpServersInline).toEqual({ mcpServers: {} });
   });
 });

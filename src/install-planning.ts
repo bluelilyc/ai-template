@@ -112,6 +112,15 @@ export async function createInstallPlan(
     operations.push(...(await createDirectoryOperations(sourceRoot, destinationRoot, 'skill')));
   }
 
+  for (const scriptPath of pluginManifest.normalizedManifest.scripts) {
+    const sourceRoot = resolve(pluginRoot, scriptPath);
+    const destinationRoot =
+      options.target === 'copilot'
+        ? join(targetRoot, 'scripts')
+        : join(targetRoot, 'scripts');
+    operations.push(...(await createDirectoryOperations(sourceRoot, destinationRoot, 'skill')));
+  }
+
   if (pluginManifest.normalizedManifest.hooksPath) {
     const sourcePath = resolve(pluginRoot, pluginManifest.normalizedManifest.hooksPath);
     operations.push({

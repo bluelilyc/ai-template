@@ -39,7 +39,11 @@ describe('installMarketplacePlugin', () => {
     expect(await readFile(join(workDir, '.github', 'agents', 'core.agent.md'), 'utf-8')).toContain(
       '# core'
     );
+    expect(await readFile(join(workDir, '.github', 'scripts', 'install.ps1'), 'utf-8')).toContain(
+      'Write-Host'
+    );
     expect(result.record.installedFiles).toContain('.github/hooks/core.json');
+    expect(result.record.installedFiles).toContain('.github/scripts/install.ps1');
     expect(settings.plugins).toHaveLength(1);
     expect(settings.plugins[0].name).toBe('core');
   });
@@ -53,6 +57,9 @@ describe('installMarketplacePlugin', () => {
     expect(
       await readFile(join(workDir, '.claude', 'core', '.claude-plugin', 'plugin.json'), 'utf-8')
     ).toContain('"name": "core"');
+    expect(await readFile(join(workDir, '.claude', 'core', 'scripts', 'install.ps1'), 'utf-8')).toContain(
+      'Write-Host'
+    );
   });
 });
 
@@ -174,6 +181,7 @@ describe('removeMarketplacePlugin', () => {
         removedFiles: expect.arrayContaining([
           '.github/agents/core.agent.md',
           '.github/hooks/core.json',
+          '.github/scripts/install.ps1',
         ]),
       },
     ]);

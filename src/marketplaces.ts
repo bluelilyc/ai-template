@@ -144,6 +144,29 @@ function getMaterializedPluginRootRelativePath(sourceRoot: string, pluginRoot: s
   return relativePluginRoot;
 }
 
+const CACHE_GITIGNORE_ENTRIES = ['.aipm/', '.aipm/cache', '.aipm/cache/', '.aipm/cache/marketplaces/'];
+
+async function ensureMarketplaceCacheIgnored(workspaceRoot: string): Promise<void> {
+  const gitignorePath = join(workspaceRoot, '.gitignore');
+  let content = '';
+
+  try {
+    content = await fs.readFile(gitignorePath, 'utf-8');
+  } catch (error) {
+    if (!(error instanceof Error) || !('code' in error) || (error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      throw error;
+    }
+  }
+
+  const lines = content.replace(/\r\n/g, '\n').split('\n');
+  if (lines.some((line) => CACHE_GITIGNORE_ENTRIES.includes(line.trim()))) {
+    return;
+  }
+
+  const prefix = content.length > 0 && !content.endsWith('\n') ? '\n' : '';
+  await fs.writeFile(gitignorePath, `${content}${prefix}.aipm/cache/\n`, 'utf-8');
+}
+
 async function materializeMarketplaceCache(sourceRoot: string, cachePath: string): Promise<void> {
   const manifest = await readMarketplaceManifest(sourceRoot);
   const manifestSourcePath = getMarketplaceManifestPath(sourceRoot);
@@ -252,6 +275,7 @@ export async function syncMarketplaceSource(
   const cacheRoot = getMarketplaceCacheRoot(workspaceRoot);
   const localPath = join(cacheRoot, normalizedSource.cacheKey);
 
+  await ensureMarketplaceCacheIgnored(workspaceRoot);
   await fs.mkdir(cacheRoot, { recursive: true });
 
   if (normalizedSource.kind === 'file') {
@@ -503,6 +527,14 @@ export function isPluginManifest(value: unknown): value is AgentPluginManifest {
   }
 
   if (
+    value.scripts !== undefined &&
+    typeof value.scripts !== 'string' &&
+    !isStringArray(value.scripts)
+  ) {
+    return false;
+  }
+
+  if (
     value.hooks !== undefined &&
     typeof value.hooks !== 'string' &&
     !isRecord(value.hooks)
@@ -552,6 +584,7 @@ export function normalizePluginManifest(
     author: manifest.author,
     skills: normalizePathList(manifest.skills),
     agents: normalizePathList(manifest.agents),
+    scripts: normalizePathList(manifest.scripts),
     dependencies: manifest.dependencies ?? [],
   };
 
